@@ -205,13 +205,16 @@ def build_session_plan(
 
 
 def _warmup_difficulty(difficulty_map: dict, difficulty_global: str) -> str:
-    """Warmup tier: per-topic override > global > medium (never auto-inferred).
+    """Warmup tier: always hard, unless an explicit per-topic override is set.
 
+    The warmup always pulls from the full 1×1–10×10 fact pool (the "hard" tier)
+    so table practice never softens. A global `--difficulty` does NOT drag it
+    down; only an explicit `multiplication-table=<level>` override can change it.
     Weak-fact targeting is applied separately and is unaffected by this tier.
     """
     if difficulty_map and "multiplication-table" in difficulty_map:
         return difficulty_map["multiplication-table"]
-    return difficulty_global or "medium"
+    return "hard"
 
 
 def _bootstrap_plan(

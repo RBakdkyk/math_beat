@@ -152,6 +152,21 @@ check(all(s["difficulty"] == "hard" for s in warm), "warmup tier must honor mult
 check(any("target_fact" in s for s in warm), "warmup must still target weak facts under an override")
 check(warm[0].get("target_fact") == "7×8", "warmup must target the weakest fact (7×8) first")
 
+# 4e. warmup tier defaults to hard, and a global --difficulty does NOT drag it down
+plain = S.build_session_plan(count=8)
+pw = [s for s in plain if s["qtype"] == "multiplication-table"]
+check(bool(pw) and all(s["difficulty"] == "hard" for s in pw),
+      "warmup must default to hard on a plain session")
+geasy = S.build_session_plan(count=8, difficulty_override="easy")
+gw = [s for s in geasy if s["qtype"] == "multiplication-table"]
+check(bool(gw) and all(s["difficulty"] == "hard" for s in gw),
+      "global --difficulty easy must NOT lower the warmup tier (stays hard)")
+# explicit override still wins (escape hatch)
+ov = S.build_session_plan(count=8, difficulty_map={"multiplication-table": "easy"})
+ow = [s for s in ov if s["qtype"] == "multiplication-table"]
+check(bool(ow) and all(s["difficulty"] == "easy" for s in ow),
+      "explicit multiplication-table override must still apply")
+
 
 # ── 5. Token parsing + invalid input (task 4.4) ──────────────────────────────
 g, m = S.parse_difficulty_tokens(["medium", "fractions=hard"])

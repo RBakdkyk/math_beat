@@ -144,7 +144,7 @@ def _mult_table(difficulty: str) -> dict:
     pools = {
         "easy":   [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 5 and b <= 5],
         "medium": [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 8],
-        "hard":   MULTIPLICATION_FACTS,
+        "hard":   [(a, b) for a, b in MULTIPLICATION_FACTS if a > 4 and b > 4],
     }
     a, b = random.choice(pools.get(difficulty, pools["medium"]))
     result = a * b
