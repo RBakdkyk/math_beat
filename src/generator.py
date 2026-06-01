@@ -101,6 +101,7 @@ def generate_session(
     count: int = 8,
     topics_override: list = None,
     difficulty_override: str = None,
+    difficulty_map: dict = None,
     session_date: str = None,
 ) -> list:
     """Generate a full session of questions.
@@ -117,6 +118,7 @@ def generate_session(
         count=count,
         topics_override=topics_override,
         difficulty_override=difficulty_override,
+        difficulty_map=difficulty_map,
     )
 
     questions = []

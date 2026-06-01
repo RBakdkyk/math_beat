@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from generator import generate_session
 from formatter import format_session
+from session import parse_difficulty_tokens, resolve_topic_alias
 from wiki import generated_path, write_generated, today as wiki_today
 
 
@@ -17,10 +18,33 @@ def main():
     parser = argparse.ArgumentParser(description="Generate a math practice session for Ayala.")
     parser.add_argument("--topics", nargs="+", help="Question types to include (overrides auto-selection)")
     parser.add_argument("--count", type=int, default=8, help="Number of questions (default: 8)")
-    parser.add_argument("--difficulty", choices=["easy", "medium", "hard"], help="Force difficulty level")
+    parser.add_argument(
+        "--difficulty",
+        nargs="+",
+        help="A single global level (easy/medium/hard) and/or per-topic "
+             "assignments (e.g. fractions=hard division=easy)",
+    )
     parser.add_argument("--date", default=None, help="Session date YYYY-MM-DD (default: today)")
     parser.add_argument("--force", action="store_true", help="Overwrite existing session")
     args = parser.parse_args()
+
+    difficulty_global = None
+    difficulty_map = None
+    if args.difficulty:
+        try:
+            difficulty_global, difficulty_map = parse_difficulty_tokens(args.difficulty)
+        except ValueError as e:
+            parser.error(f"--difficulty: {e}")
+
+    # Expand --topics tokens through the same alias map (e.g. fractions ->
+    # the three fraction subtopics) so they line up with per-topic difficulty
+    # keys and resolve to real template generators. Unknown tokens pass through.
+    topics_override = None
+    if args.topics:
+        topics_override = []
+        for tok in args.topics:
+            resolved = resolve_topic_alias(tok)
+            topics_override.extend(resolved if resolved else [tok])
 
     session_date = args.date or wiki_today()
     out_path = generated_path(session_date)
@@ -31,8 +55,9 @@ def main():
 
     questions = generate_session(
         count=args.count,
-        topics_override=args.topics,
-        difficulty_override=args.difficulty,
+        topics_override=topics_override,
+        difficulty_override=difficulty_global,
+        difficulty_map=difficulty_map,
         session_date=session_date,
     )
 

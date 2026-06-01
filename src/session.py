@@ -10,6 +10,94 @@ from wiki import read_summary
 from curriculum import TOPICS, TEMPLATE_TOPICS
 
 
+# Topic alias map — mirrors the /practice skill. Maps a user-facing key
+# (an alias or a Hebrew word) to the concrete subtopic qtypes it covers.
+# Any direct qtype in TOPICS also resolves to itself (see resolve_topic_alias).
+TOPIC_ALIASES = {
+    "fractions": ["fraction-addition", "fraction-comparison", "fraction-subtraction"],
+    "שברים":      ["fraction-addition", "fraction-comparison", "fraction-subtraction"],
+    "multiplication": ["multiplication-table", "multiplication"],
+    "כפל":            ["multiplication-table", "multiplication"],
+    "division": ["division"],
+    "חילוק":     ["division"],
+    "arithmetic": ["addition", "subtraction", "multiplication", "division"],
+    "חשבון":       ["addition", "subtraction", "multiplication", "division"],
+    "geometry": ["geometry"],
+    "צורות":     ["geometry"],
+    "probability": ["probability"],
+    "סיכויים":      ["probability"],
+}
+
+VALID_LEVELS = {"easy", "medium", "hard"}
+
+
+def resolve_topic_alias(key: str) -> list | None:
+    """Resolve an override key to the list of qtypes it covers.
+
+    Returns None if the key is neither a known alias nor a direct qtype.
+    """
+    if key in TOPIC_ALIASES:
+        return list(TOPIC_ALIASES[key])
+    if key in TOPICS:
+        return [key]
+    return None
+
+
+def parse_difficulty_tokens(tokens: list) -> tuple:
+    """Parse `--difficulty` tokens into (global_level, {qtype: level}).
+
+    Each token is either a bare level (the global fallback) or `topic=level`.
+    Per-topic keys are expanded through the alias map to concrete qtypes.
+    Raises ValueError with a clear message on any invalid token.
+    """
+    global_level = None
+    diff_map = {}
+    for tok in tokens:
+        if "=" in tok:
+            key, _, level = tok.partition("=")
+            key = key.strip()
+            level = level.strip()
+            if level not in VALID_LEVELS:
+                raise ValueError(
+                    f"invalid difficulty level {level!r} in {tok!r}; "
+                    f"must be one of easy, medium, hard"
+                )
+            qtypes = resolve_topic_alias(key)
+            if not qtypes:
+                raise ValueError(
+                    f"unknown topic {key!r} in {tok!r}; "
+                    f"use a topic key or alias (e.g. fractions, division)"
+                )
+            for qt in qtypes:
+                diff_map[qt] = level
+        else:
+            level = tok.strip()
+            if level not in VALID_LEVELS:
+                raise ValueError(
+                    f"invalid difficulty {level!r}; expected a level "
+                    f"(easy/medium/hard) or topic=level (e.g. fractions=hard)"
+                )
+            global_level = level
+    return global_level, diff_map
+
+
+def resolve_difficulty(
+    qtype: str,
+    difficulty_map: dict = None,
+    difficulty_global: str = None,
+    summary: dict = None,
+) -> str:
+    """Resolve a question slot's difficulty.
+
+    Precedence: per-topic override > global `--difficulty` > auto inference.
+    """
+    if difficulty_map and qtype in difficulty_map:
+        return difficulty_map[qtype]
+    if difficulty_global:
+        return difficulty_global
+    return _infer_difficulty(summary or {}, qtype)
+
+
 def _staleness_days(last_practiced: str | None) -> int:
     if last_practiced is None:
         return 999  # Never practiced — very stale
@@ -74,6 +162,7 @@ def build_session_plan(
     count: int = 8,
     topics_override: list = None,
     difficulty_override: str = None,
+    difficulty_map: dict = None,
 ) -> list:
     """Build a session plan: list of {qtype, difficulty} dicts.
 
@@ -83,9 +172,14 @@ def build_session_plan(
 
     With overrides:
       - topics_override: list of qtypes to use exclusively
-      - difficulty_override: force a specific difficulty
+      - difficulty_override: global difficulty fallback
+      - difficulty_map: {qtype: level} per-topic overrides (expanded from aliases)
 
-    Returns list of {qtype, difficulty, weak_facts?} dicts.
+    Difficulty precedence per slot: per-topic override > global > auto.
+    A per-topic override only sets the tier when its topic is actually selected;
+    it does NOT force the topic into the session.
+
+    Returns list of {qtype, difficulty, target_fact?} dicts.
     """
     summary = read_summary()
     has_progress = bool(summary.get("topics"))
@@ -95,45 +189,76 @@ def build_session_plan(
         plan = []
         topic_cycle = topics_override * (count // len(topics_override) + 1)
         for i in range(count):
+            qtype = topic_cycle[i]
             plan.append({
-                "qtype": topic_cycle[i],
-                "difficulty": difficulty_override or "medium",
+                "qtype": qtype,
+                "difficulty": resolve_difficulty(
+                    qtype, difficulty_map, difficulty_override, summary
+                ),
             })
         return plan
 
     if not has_progress:
-        return _bootstrap_plan(count, difficulty_override)
+        return _bootstrap_plan(count, difficulty_override, difficulty_map, summary)
 
-    return _adaptive_plan(summary, count, difficulty_override)
+    return _adaptive_plan(summary, count, difficulty_override, difficulty_map)
 
 
-def _bootstrap_plan(count: int, difficulty: str = None) -> list:
-    """Diagnostic session for first run (no progress data)."""
+def _warmup_difficulty(difficulty_map: dict, difficulty_global: str) -> str:
+    """Warmup tier: per-topic override > global > medium (never auto-inferred).
+
+    Weak-fact targeting is applied separately and is unaffected by this tier.
+    """
+    if difficulty_map and "multiplication-table" in difficulty_map:
+        return difficulty_map["multiplication-table"]
+    return difficulty_global or "medium"
+
+
+def _bootstrap_plan(
+    count: int,
+    difficulty: str = None,
+    difficulty_map: dict = None,
+    summary: dict = None,
+) -> list:
+    """Diagnostic session for first run (no progress data).
+
+    Advanced pitch: non-warmup questions start at `medium` (not `easy`).
+    """
+    summary = summary or {}
     plan = []
+    warmup_diff = _warmup_difficulty(difficulty_map, difficulty)
     # 3 multiplication warmup
     for _ in range(min(3, count)):
-        plan.append({"qtype": "multiplication-table", "difficulty": difficulty or "medium"})
-    # Remaining: distribute across core topics
+        plan.append({"qtype": "multiplication-table", "difficulty": warmup_diff})
+    # Remaining: distribute across core topics, starting at medium for an
+    # advanced student (auto inference on an empty summary yields medium).
     core = ["addition", "subtraction", "division", "fraction-comparison", "fraction-addition"]
     remaining = count - len(plan)
     for i in range(remaining):
+        qtype = core[i % len(core)]
         plan.append({
-            "qtype": core[i % len(core)],
-            "difficulty": difficulty or "easy",
+            "qtype": qtype,
+            "difficulty": resolve_difficulty(qtype, difficulty_map, difficulty, summary),
         })
     return plan
 
 
-def _adaptive_plan(summary: dict, count: int, difficulty: str = None) -> list:
+def _adaptive_plan(
+    summary: dict,
+    count: int,
+    difficulty: str = None,
+    difficulty_map: dict = None,
+) -> list:
     """Session plan driven by progress data."""
     plan = []
     warmup_count = min(3, count)
     remaining = count - warmup_count
 
-    # Warmup: multiplication, targeting weak facts
+    # Warmup: multiplication, targeting weak facts (tier is not auto-inferred)
+    warmup_diff = _warmup_difficulty(difficulty_map, difficulty)
     weak_facts = _weakest_mult_facts(summary, n=warmup_count)
     for i in range(warmup_count):
-        entry = {"qtype": "multiplication-table", "difficulty": difficulty or "medium"}
+        entry = {"qtype": "multiplication-table", "difficulty": warmup_diff}
         if i < len(weak_facts):
             entry["target_fact"] = weak_facts[i]
         plan.append(entry)
@@ -150,8 +275,8 @@ def _adaptive_plan(summary: dict, count: int, difficulty: str = None) -> list:
     main_count = max(1, int(remaining * 0.65))
     secondary_count = remaining - main_count
 
-    main_diff = difficulty or _infer_difficulty(summary, main_topic)
-    sec_diff = difficulty or _infer_difficulty(summary, secondary_topic)
+    main_diff = resolve_difficulty(main_topic, difficulty_map, difficulty, summary)
+    sec_diff = resolve_difficulty(secondary_topic, difficulty_map, difficulty, summary)
 
     for _ in range(main_count):
         plan.append({"qtype": main_topic, "difficulty": main_diff})
@@ -162,11 +287,15 @@ def _adaptive_plan(summary: dict, count: int, difficulty: str = None) -> list:
 
 
 def _infer_difficulty(summary: dict, qtype: str) -> str:
-    """Pick difficulty based on correct rate."""
+    """Pick difficulty based on correct rate.
+
+    Thresholds skew upward for an advanced student: harder tiers are reached
+    sooner than the prior 0.4/0.8 split.
+    """
     tdata = summary.get("topics", {}).get(qtype, {})
     rate = tdata.get("correct_rate", 0.5)
-    if rate < 0.4:
+    if rate < 0.3:
         return "easy"
-    if rate > 0.8:
+    if rate > 0.65:
         return "hard"
     return "medium"

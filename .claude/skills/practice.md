@@ -10,6 +10,7 @@ Examples:
 - `/practice` — automatic, driven by progress
 - `/practice fractions 10 hard` — override topic/count/difficulty
 - `/practice multiplication-table` — only multiplication warmup
+- `/practice fractions=hard division=easy` — per-topic difficulty, topic selection automatic
 
 ## Behavior
 
@@ -18,7 +19,8 @@ Examples:
 If arguments are provided, map them:
 - topic words like "fractions", "division", "multiplication" → map to topic keys
 - count = integer
-- difficulty = "easy" / "medium" / "hard"
+- difficulty = a single global level ("easy"/"medium"/"hard"), OR one or more
+  per-topic assignments of the form `topic=level` (e.g. `fractions=hard division=easy`)
 
 Topic name mapping (Hebrew or English accepted):
 - fractions / שברים → fraction-addition, fraction-comparison, fraction-subtraction
@@ -27,6 +29,14 @@ Topic name mapping (Hebrew or English accepted):
 - arithmetic / חשבון → addition, subtraction, multiplication, division
 - geometry / צורות → geometry
 - probability / סיכויים → probability
+
+**Difficulty syntax:**
+- A bare positional level (`hard`) is the **global** difficulty applied to all questions.
+- `topic=level` tokens set the tier for a specific topic only; precedence is
+  per-topic > global > automatic. A per-topic override applies only when that
+  topic is selected — it does not force the topic in. To guarantee a topic
+  appears, also pass it as the positional topic (which maps to `--topics`).
+- The two forms compose: `medium fractions=hard` → global medium, fractions hard.
 
 ### 2. Check if today's session already exists
 
@@ -59,6 +69,12 @@ python generate.py
 ```bash
 python generate.py --topics {topic} --count {count} --difficulty {difficulty}
 ```
+
+- Pass the global level as a bare token: `--difficulty hard`.
+- Pass per-topic tiers as `topic=level` tokens (no `--topics` needed if you only
+  want to set difficulty): `--difficulty fractions=hard division=easy`.
+- `--difficulty` accepts multiple tokens and may mix a global with per-topic
+  assignments: `--difficulty medium fractions=hard`.
 
 Add `--force` if regenerating an existing session.
 
