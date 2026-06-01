@@ -93,7 +93,7 @@ For each question:
 - Compare the child's answer to the correct answer:
   - **Numeric answers:** allow minor variations ("56" vs "56.0", spaces)
   - **Categorical answers (כן/לא, ראשוני/פריק):** case-insensitive Hebrew string match
-  - **Fraction answers:** accept equivalent forms ("3/4" = "0.75" is acceptable)
+  - **Fraction answers:** accept any mathematically equivalent form. Stored answers are UNREDUCED (grade 4 does not reduce — reduction is grade 5), so e.g. the stored answer "2/4" MUST also accept "1/2" and "0.5"; stored "6/6" must accept "1". Match reduced ↔ unreduced ↔ decimal as equal.
 - Mark as correct or wrong
 - Record a note in English if the parent described what was written (e.g., "wrote 54 instead of 56", "didn't understand concept")
 
@@ -141,5 +141,7 @@ Display the output, then add a one-line focus for tomorrow:
 
 - For exercise "7 × 8 =" — correct answer is "56". Match "56", "חמישים ושש" (if parent types Hebrew)
 - For exercise "17" (description: "ראשוני או פריק?") — correct is "ראשוני". Match "ראשוני", "כן", "yes", "prime"
-- For exercise "1/2 + 1/4 =" — correct is "3/4". Match "3/4", "0.75"
+- For exercise "1/4 + 1/4 =" — stored answer is "2/4" (unreduced). Match "2/4", "1/2", "0.5"
+- For exercise "1/2 + 1/4 =" — stored answer is "3/4". Match "3/4", "0.75"
+- For an exponent exercise "8 =" (description: "כתוב/י כחזקה") — correct is "2^3". Match "2^3", "2³"; for "is a^b = b^a?" match כן/לא (yes/no)
 - If unclear, ask rather than guess wrong
