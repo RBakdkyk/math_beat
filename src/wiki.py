@@ -22,6 +22,10 @@ def results_path(session_date: str) -> Path:
     return session_dir(session_date) / "results.json"
 
 
+def quiz_path(session_date: str) -> Path:
+    return session_dir(session_date) / "quiz.html"
+
+
 def today() -> str:
     return date.today().isoformat()
 
