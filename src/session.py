@@ -217,6 +217,22 @@ def _warmup_difficulty(difficulty_map: dict, difficulty_global: str) -> str:
     return "hard"
 
 
+# Each session covers the multiplication warmup plus this many distinct subjects.
+_SUBJECTS_PER_SESSION = 3
+
+
+def _distribute(total: int, k: int) -> list:
+    """Split `total` questions into k groups as evenly as possible.
+
+    Any remainder goes to the earliest (highest-priority) groups, e.g.
+    _distribute(5, 3) -> [2, 2, 1].
+    """
+    if k <= 0:
+        return []
+    base, extra = divmod(total, k)
+    return [base + (1 if i < extra else 0) for i in range(k)]
+
+
 def _bootstrap_plan(
     count: int,
     difficulty: str = None,
@@ -233,16 +249,15 @@ def _bootstrap_plan(
     # 3 multiplication warmup
     for _ in range(min(3, count)):
         plan.append({"qtype": "multiplication-table", "difficulty": warmup_diff})
-    # Remaining: distribute across core topics, starting at medium for an
-    # advanced student (auto inference on an empty summary yields medium).
+    # Remaining: spread across the first few core topics (medium for an advanced
+    # student — auto inference on an empty summary yields medium).
     core = ["addition", "subtraction", "division", "fraction-comparison", "fraction-addition"]
     remaining = count - len(plan)
-    for i in range(remaining):
-        qtype = core[i % len(core)]
-        plan.append({
-            "qtype": qtype,
-            "difficulty": resolve_difficulty(qtype, difficulty_map, difficulty, summary),
-        })
+    k = min(_SUBJECTS_PER_SESSION, remaining, len(core))
+    for topic, share in zip(core[:k], _distribute(remaining, k)):
+        diff = resolve_difficulty(topic, difficulty_map, difficulty, summary)
+        for _ in range(share):
+            plan.append({"qtype": topic, "difficulty": diff})
     return plan
 
 
@@ -269,22 +284,15 @@ def _adaptive_plan(
     # Get priority-sorted topics (excluding warmup)
     sorted_topics = _prioritized_topics(summary, exclude={"multiplication-table"})
     if not sorted_topics:
-        sorted_topics = ["fraction-addition", "division"]
+        sorted_topics = ["fraction-addition", "division", "addition"]
 
-    main_topic = sorted_topics[0]
-    secondary_topic = sorted_topics[1] if len(sorted_topics) > 1 else sorted_topics[0]
-
-    # Allocate: 60-70% to main, 30-40% to secondary
-    main_count = max(1, int(remaining * 0.65))
-    secondary_count = remaining - main_count
-
-    main_diff = resolve_difficulty(main_topic, difficulty_map, difficulty, summary)
-    sec_diff = resolve_difficulty(secondary_topic, difficulty_map, difficulty, summary)
-
-    for _ in range(main_count):
-        plan.append({"qtype": main_topic, "difficulty": main_diff})
-    for _ in range(secondary_count):
-        plan.append({"qtype": secondary_topic, "difficulty": sec_diff})
+    # Cover up to _SUBJECTS_PER_SESSION distinct subjects, highest-priority first,
+    # splitting the remaining questions as evenly as possible across them.
+    k = min(_SUBJECTS_PER_SESSION, remaining, len(sorted_topics))
+    for topic, share in zip(sorted_topics[:k], _distribute(remaining, k)):
+        diff = resolve_difficulty(topic, difficulty_map, difficulty, summary)
+        for _ in range(share):
+            plan.append({"qtype": topic, "difficulty": diff})
 
     return plan
 

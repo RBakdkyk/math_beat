@@ -130,6 +130,13 @@ div = [s for s in auto_plan if s["qtype"] == "division"]
 check(fa and all(s["difficulty"] == "hard" for s in fa), "auto infer: fraction-addition 0.9 -> hard")
 check(div and all(s["difficulty"] == "medium" for s in div), "auto infer: untracked division -> medium")
 
+# 4a-bis. session covers warmup + 3 distinct subjects, spread evenly (5 -> 2/2/1)
+nonwarm_types = [s["qtype"] for s in auto_plan if s["qtype"] != "multiplication-table"]
+check(len(set(nonwarm_types)) == 3, "session must cover 3 distinct non-warmup subjects")
+check(len(nonwarm_types) == 5, "count=8 → 3 warmup + 5 subject questions")
+check(sorted([nonwarm_types.count(t) for t in set(nonwarm_types)], reverse=True) == [2, 2, 1],
+      "remaining questions must split 2/2/1 across the 3 subjects")
+
 # 4b. precedence inside a real plan: per-topic > global > auto
 mixed = S.build_session_plan(count=8, difficulty_override="easy", difficulty_map={"fraction-addition": "hard"})
 mfa = [s for s in mixed if s["qtype"] == "fraction-addition"]
