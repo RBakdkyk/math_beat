@@ -1,0 +1,98 @@
+[
+  {
+    "description": "חשב/י את המכפלה:",
+    "exercise": "8 × 9 =",
+    "answer": "72",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:8×9",
+    "id": 1,
+    "date": "2026-06-01",
+    "difficulty": "hard"
+  },
+  {
+    "description": "מה המכפלה?",
+    "exercise": "9 × 9 =",
+    "answer": "81",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:9×9",
+    "id": 2,
+    "date": "2026-06-01",
+    "difficulty": "hard"
+  },
+  {
+    "description": "מה המספר החסר?",
+    "exercise": "6 × ___ = 54",
+    "answer": "9",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:6×9",
+    "id": 3,
+    "date": "2026-06-01",
+    "difficulty": "hard"
+  },
+  {
+    "description": "פרק/י לגורמים ראשוניים:",
+    "exercise": "26",
+    "answer": "2 × 13",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:26",
+    "id": 4,
+    "date": "2026-06-01",
+    "difficulty": "medium"
+  },
+  {
+    "description": "ראשוני או פריק?",
+    "exercise": "29",
+    "answer": "ראשוני",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:29",
+    "id": 5,
+    "date": "2026-06-01",
+    "difficulty": "medium"
+  },
+  {
+    "description": "בדוק/י: ראשוני או פריק?",
+    "exercise": "11",
+    "answer": "ראשוני",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:11",
+    "id": 6,
+    "date": "2026-06-01",
+    "difficulty": "medium"
+  },
+  {
+    "description": "מה תוצאת הביטוי?",
+    "exercise": "24 + 8 ÷ 2 =",
+    "answer": "28",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:24 + 8 ÷ 2",
+    "id": 7,
+    "date": "2026-06-01",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י לפי סדר הפעולות:",
+    "exercise": "(33 - 19) × 4 =",
+    "answer": "56",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:(33 - 19) × 4",
+    "id": 8,
+    "date": "2026-06-01",
+    "difficulty": "medium"
+  }
+]

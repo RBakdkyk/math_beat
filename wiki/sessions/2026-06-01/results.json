@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "correct": true
+  },
+  {
+    "id": 2,
+    "correct": true
+  },
+  {
+    "id": 3,
+    "correct": true,
+    "note": "knew answer (3); accidental extra keypresses came through as 381"
+  },
+  {
+    "id": 4,
+    "correct": true
+  },
+  {
+    "id": 5,
+    "correct": true
+  },
+  {
+    "id": 6,
+    "correct": true,
+    "note": "wrote 52.1 = 52 remainder 1 (nonstandard notation)"
+  },
+  {
+    "id": 7,
+    "correct": true,
+    "note": "correct comparison; sign garbled by RTL/alignment in quiz, came through as >"
+  },
+  {
+    "id": 8,
+    "correct": true,
+    "note": "wrote 40/32 = 1 2/8 (correct, common denominator 32)"
+  }
+]

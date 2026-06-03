@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .DS_Store
 .env
+
+# Derived quiz HTML — regenerable via `python build_quiz.py --date <date>`
+wiki/sessions/*/quiz.html

@@ -1,0 +1,98 @@
+[
+  {
+    "description": "חשב/י את המכפלה:",
+    "exercise": "8 × 8 =",
+    "answer": "64",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:8×8",
+    "id": 1,
+    "date": "2026-06-02",
+    "difficulty": "hard"
+  },
+  {
+    "description": "מה המספר החסר?",
+    "exercise": "49 = ___ × 7",
+    "answer": "7",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:7×7",
+    "id": 2,
+    "date": "2026-06-02",
+    "difficulty": "hard"
+  },
+  {
+    "description": "כמה זה:",
+    "exercise": "9 × 10 =",
+    "answer": "90",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:9×10",
+    "id": 3,
+    "date": "2026-06-02",
+    "difficulty": "hard"
+  },
+  {
+    "description": "בדוק/י: ראשוני או פריק?",
+    "exercise": "40",
+    "answer": "פריק",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:40",
+    "id": 4,
+    "date": "2026-06-02",
+    "difficulty": "medium"
+  },
+  {
+    "description": "בדוק/י: ראשוני או פריק?",
+    "exercise": "17",
+    "answer": "ראשוני",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:17",
+    "id": 5,
+    "date": "2026-06-02",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י לפי סדר הפעולות:",
+    "exercise": "18 + 48 ÷ 6 =",
+    "answer": "26",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:18 + 48 ÷ 6",
+    "id": 6,
+    "date": "2026-06-02",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י לפי סדר הפעולות:",
+    "exercise": "3 + 36 ÷ 9 =",
+    "answer": "7",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:3 + 36 ÷ 9",
+    "id": 7,
+    "date": "2026-06-02",
+    "difficulty": "medium"
+  },
+  {
+    "description": "מהי ספרת העשרות?",
+    "exercise": "18,988",
+    "answer": "8",
+    "answer_type": "numeric",
+    "type": "natural-numbers",
+    "subtopic": "natural-numbers",
+    "signature": "natnum:18988-pos1",
+    "id": 8,
+    "date": "2026-06-02",
+    "difficulty": "medium"
+  }
+]
