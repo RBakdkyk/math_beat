@@ -1,0 +1,98 @@
+[
+  {
+    "description": "מה המספר החסר?",
+    "exercise": "72 = ___ × 9",
+    "answer": "8",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:8×9",
+    "id": 1,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "כמה זה:",
+    "exercise": "6 × 9 =",
+    "answer": "54",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:6×9",
+    "id": 2,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "כמה זה:",
+    "exercise": "5 × 7 =",
+    "answer": "35",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:5×7",
+    "id": 3,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "בדוק/י: ראשוני או פריק?",
+    "exercise": "23",
+    "answer": "ראשוני",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:23",
+    "id": 4,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "ראשוני או פריק?",
+    "exercise": "10",
+    "answer": "פריק",
+    "answer_type": "categorical",
+    "type": "prime-composite",
+    "subtopic": "prime-composite",
+    "signature": "prime:10",
+    "id": 5,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "פתור/י:",
+    "exercise": "9 × 4 - 24 ÷ 3 =",
+    "answer": "28",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:9 × 4 - 24 ÷ 3",
+    "id": 6,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "פתור/י:",
+    "exercise": "10 × 5 - 42 ÷ 7 =",
+    "answer": "44",
+    "answer_type": "numeric",
+    "type": "order-of-operations",
+    "subtopic": "order-of-operations",
+    "signature": "orderops:10 × 5 - 42 ÷ 7",
+    "id": 7,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  },
+  {
+    "description": "מה ערך ספרת המאות?",
+    "exercise": "151,198",
+    "answer": "1",
+    "answer_type": "numeric",
+    "type": "natural-numbers",
+    "subtopic": "natural-numbers",
+    "signature": "natnum:151198-pos2",
+    "id": 8,
+    "date": "2026-06-03",
+    "difficulty": "hard"
+  }
+]

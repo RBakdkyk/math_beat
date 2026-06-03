@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "signature": "mult:8×9",
+    "correct": false,
+    "difficulty": "hard",
+    "note": "wrote 65 instead of 8"
+  },
+  {
+    "id": 2,
+    "signature": "mult:6×9",
+    "correct": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": 3,
+    "signature": "mult:5×7",
+    "correct": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": 6,
+    "signature": "orderops:9 × 4 - 24 ÷ 3",
+    "correct": false,
+    "difficulty": "hard",
+    "note": "wrote 44 instead of 28"
+  },
+  {
+    "id": 7,
+    "signature": "orderops:10 × 5 - 42 ÷ 7",
+    "correct": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": 8,
+    "signature": "natnum:151198-pos2",
+    "correct": true,
+    "difficulty": "hard"
+  }
+]

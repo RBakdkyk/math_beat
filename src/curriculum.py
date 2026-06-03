@@ -32,7 +32,14 @@ TOPICS = {
 }
 
 CLAUDE_TOPICS = {"word-problems", "geometry", "probability", "symmetry"}
-TEMPLATE_TOPICS = {k for k in TOPICS if k not in CLAUDE_TOPICS}
+
+# Topics frozen out of automatic generation (not yet taught in class). They stay
+# defined in TOPICS so past sessions still resolve, but are never auto-selected.
+FROZEN_TOPICS = {"prime-composite"}
+
+TEMPLATE_TOPICS = {
+    k for k in TOPICS if k not in CLAUDE_TOPICS and k not in FROZEN_TOPICS
+}
 
 # Block headers for WhatsApp output
 BLOCK_HEADERS = {
