@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "signature": "mult:6×7",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 2,
+    "signature": "mult:10×10",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 3,
+    "signature": "mult:5×5",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 4,
+    "signature": "mult-tens:43×40",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 5,
+    "signature": "mult-tens:81×300",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 6,
+    "signature": "mult-long:31×28",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 7,
+    "signature": "mult-long:16×16",
+    "correct": true,
+    "note": ""
+  },
+  {
+    "id": 8,
+    "signature": "perim:19×8",
+    "correct": true,
+    "note": ""
+  }
+]

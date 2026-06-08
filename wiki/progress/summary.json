@@ -1,9 +1,9 @@
 {
   "topics": {
     "multiplication-table": {
-      "correct_rate": 0.833,
-      "times_practiced": 2,
-      "last_practiced": "2026-06-03",
+      "correct_rate": 0.889,
+      "times_practiced": 3,
+      "last_practiced": "2026-06-08",
       "facts": {
         "7×10": {
           "correct": 1,
@@ -63,11 +63,44 @@
               "wrong": 0
             }
           }
+        },
+        "6×7": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-08",
+          "by_difficulty": {
+            "hard": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "10×10": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-08",
+          "by_difficulty": {
+            "hard": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "5×5": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-08",
+          "by_difficulty": {
+            "hard": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
         }
       },
       "difficulty_rates": {
         "medium": 1.0,
-        "hard": 0.667
+        "hard": 0.833
       }
     },
     "addition": {
@@ -186,6 +219,66 @@
       ],
       "difficulty_rates": {
         "hard": 1.0
+      }
+    },
+    "multiplication-by-tens": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-08",
+      "used_params": [
+        {
+          "sig": "mult-tens:43×40",
+          "date": "2026-06-08",
+          "correct": true,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "mult-tens:81×300",
+          "date": "2026-06-08",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "multiplication": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-08",
+      "used_params": [
+        {
+          "sig": "mult-long:31×28",
+          "date": "2026-06-08",
+          "correct": true,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "mult-long:16×16",
+          "date": "2026-06-08",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "measurements-perimeter": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-08",
+      "used_params": [
+        {
+          "sig": "perim:19×8",
+          "date": "2026-06-08",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
       }
     }
   }

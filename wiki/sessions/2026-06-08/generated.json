@@ -1,0 +1,98 @@
+[
+  {
+    "description": "מה המספר החסר?",
+    "exercise": "6 × ___ = 42",
+    "answer": "7",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:6×7",
+    "id": 1,
+    "date": "2026-06-08",
+    "difficulty": "hard"
+  },
+  {
+    "description": "כמה זה:",
+    "exercise": "10 × 10 =",
+    "answer": "100",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:10×10",
+    "id": 2,
+    "date": "2026-06-08",
+    "difficulty": "hard"
+  },
+  {
+    "description": "כמה זה:",
+    "exercise": "5 × 5 =",
+    "answer": "25",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:5×5",
+    "id": 3,
+    "date": "2026-06-08",
+    "difficulty": "hard"
+  },
+  {
+    "description": "מה המכפלה?",
+    "exercise": "43 × 40 =",
+    "answer": "1720",
+    "answer_type": "numeric",
+    "type": "multiplication-by-tens",
+    "subtopic": "multiplication-by-tens",
+    "signature": "mult-tens:43×40",
+    "id": 4,
+    "date": "2026-06-08",
+    "difficulty": "medium"
+  },
+  {
+    "description": "כפול/י:",
+    "exercise": "81 × 300 =",
+    "answer": "24300",
+    "answer_type": "numeric",
+    "type": "multiplication-by-tens",
+    "subtopic": "multiplication-by-tens",
+    "signature": "mult-tens:81×300",
+    "id": 5,
+    "date": "2026-06-08",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י:",
+    "exercise": "31 × 28 =",
+    "answer": "868",
+    "answer_type": "numeric",
+    "type": "multiplication",
+    "subtopic": "multiplication",
+    "signature": "mult-long:31×28",
+    "id": 6,
+    "date": "2026-06-08",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י:",
+    "exercise": "16 × 16 =",
+    "answer": "256",
+    "answer_type": "numeric",
+    "type": "multiplication",
+    "subtopic": "multiplication",
+    "signature": "mult-long:16×16",
+    "id": 7,
+    "date": "2026-06-08",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י היקף מלבן: אורך 19 מ', רוחב 8 מ'",
+    "exercise": "2 × (19 + 8) =",
+    "answer": "54 מ'",
+    "answer_type": "numeric",
+    "type": "measurements-perimeter",
+    "subtopic": "measurements-perimeter",
+    "signature": "perim:19×8",
+    "id": 8,
+    "date": "2026-06-08",
+    "difficulty": "medium"
+  }
+]
