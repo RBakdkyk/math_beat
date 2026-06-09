@@ -34,6 +34,16 @@ TOPICS = {
 CLAUDE_TOPICS = {"word-problems", "geometry", "probability", "symmetry"}
 TEMPLATE_TOPICS = {k for k in TOPICS if k not in CLAUDE_TOPICS}
 
+# Topics that require a drawn figure and therefore cannot be presented in a
+# static HTML quiz. Everything else — including word-problems and probability,
+# which are text plus a machine-checkable answer — is quiz-renderable.
+NEEDS_VISUAL_TOPICS = {"geometry", "symmetry"}
+
+
+def is_quiz_renderable(qtype: str) -> bool:
+    """True if a topic can be presented in the static HTML quiz (no figure needed)."""
+    return qtype not in NEEDS_VISUAL_TOPICS
+
 # Block headers for WhatsApp output
 BLOCK_HEADERS = {
     "multiplication-table":  "Warmup - Multiplication Table",
@@ -68,8 +78,16 @@ MULTIPLICATION_FACTS = [
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str) -> dict:
-    return {
+def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str,
+       widget: str = "text", options: list = None) -> dict:
+    """Build a question dict.
+
+    `widget` ("text"|"choice") and `options` are emitted explicitly by each
+    generator so the quiz wrap step never has to infer the input shape from
+    `type`/`answer_type` (one `type` can mix numeric, typed-string, and yes/no
+    shapes). Numeric/fraction/typed-string answers use the default "text".
+    """
+    q = {
         "description": desc,
         "exercise": exercise,
         "answer": str(answer),
@@ -77,7 +95,11 @@ def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str)
         "type": qtype,
         "subtopic": qtype,
         "signature": sig,
+        "widget": widget,
     }
+    if options is not None:
+        q["options"] = options
+    return q
 
 
 def _frac_str(f: Frac) -> str:
@@ -317,7 +339,8 @@ def _prime_composite(difficulty: str) -> dict:
         "ראשוני או פריק?",
         "בדוק/י: ראשוני או פריק?",
     ])
-    return _q(desc, str(n), answer, "categorical", "prime-composite", f"prime:{n}")
+    return _q(desc, str(n), answer, "categorical", "prime-composite", f"prime:{n}",
+              widget="choice", options=["ראשוני", "פריק"])
 
 
 def _divisibility(difficulty: str) -> dict:
@@ -332,7 +355,8 @@ def _divisibility(difficulty: str) -> dict:
     lo, hi = n_ranges.get(difficulty, (20, 200))
     n = random.randint(lo, hi)
     answer = "כן" if n % d == 0 else "לא"
-    return _q("האם מתחלק? (כן/לא)", f"{n} ÷ {d}", answer, "categorical", "divisibility", f"divides:{d}|{n}")
+    return _q("האם מתחלק? (כן/לא)", f"{n} ÷ {d}", answer, "categorical", "divisibility", f"divides:{d}|{n}",
+              widget="choice", options=["כן", "לא"])
 
 
 # Valid denominator pairs for grade 4 fraction operations.
@@ -388,8 +412,11 @@ def _fraction_comparison(difficulty: str) -> dict:
         "איזה שבר גדול יותר?",
         "השווי:",
     ])
+    # Presented in the quiz as a symbol choice with the canonical "סמני > או < או ="
+    # prompt regardless of which `desc` variant was stored; the stored answer stays
+    # the larger fraction (or "שווים"), and the /results grader derives the symbol.
     return _q(desc, f"{a}/{d1} ___ {b}/{d2}", answer, "categorical", "fraction-comparison",
-              f"frac-cmp:{a}/{d1}vs{b}/{d2}")
+              f"frac-cmp:{a}/{d1}vs{b}/{d2}", widget="choice", options=[">", "<", "="])
 
 
 def _fraction_addition(difficulty: str) -> dict:
@@ -520,7 +547,8 @@ def _exponents(difficulty: str) -> dict:
             b = random.choice([2, 3, 4, 5])
     answer = "כן" if a ** b == b ** a else "לא"
     return _q("האם שווה? (כן/לא)", f"{a}^{b} = {b}^{a}", answer,
-              "categorical", "exponents", f"exp-cmp:{a}^{b}vs{b}^{a}")
+              "categorical", "exponents", f"exp-cmp:{a}^{b}vs{b}^{a}",
+              widget="choice", options=["כן", "לא"])
 
 
 def _equations_unknown(difficulty: str) -> dict:

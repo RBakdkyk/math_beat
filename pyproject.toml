@@ -1,0 +1,7 @@
+[project]
+name = "ayala-math"
+version = "0.1.0"
+description = "Daily curriculum-aligned Hebrew math practice generator for a 4th-grade student"
+requires-python = ">=3.10"
+# Intentionally no dependencies — stdlib only (see CLAUDE.md).
+dependencies = []

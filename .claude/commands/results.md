@@ -6,12 +6,50 @@ Guided conversational flow for entering a session's results. The parent reports 
 
 ## Invocation
 
-`/results [date] [inline results]`
+`/results [date] [inline results | AYL~…code]`
 
 - `/results` — discover unprocessed sessions, ask which to process
 - `/results 2026-05-07` — process a specific session
 - `/results two wrong: 63/9, 4/5 vs 1/5` — discover session + process inline results
 - `/results 2026-05-07 all correct except q3` — specific date + inline results
+- `/results AYL~2026-06-08~W1sx…~j` — **code mode**: decode a quiz return code
+- `/results CODE:AYL~2026-06-08~W1sx…~j` — same, with optional `CODE:` prefix
+- `/results done! AYL~2026-06-08~W1sx…~j 🎉` — code embedded in pasted text
+
+## Input modes
+
+**Before anything else, scan the raw invocation text for an `AYL~` marker** (with or without a `CODE:` prefix, possibly surrounded by other text or emoji).
+
+- **If an `AYL~…` code is present → use Code mode** (below). The child solved the quiz on her phone and the parent pasted the return code; decode and grade it instead of taking a verbal report. The envelope carries the session date, so no discovery is needed.
+- **Otherwise → use Verbal mode** (the `## Behavior` flow further down).
+
+### Code mode
+
+The decode/grade/checksum logic lives in `quiz_results.py` so grading is deterministic. Pass the pasted text **starting from the `AYL~` marker** (drop any leading words), single-quoted. An `AYL~` code itself never contains a single quote, so single-quoting is safe; trailing text/emoji after the check char is ignored by the extractor.
+
+1. **Preview** (decodes, validates the checksum case-insensitively, confirms a `generated.json` exists for the envelope's date, grades; writes nothing):
+   ```bash
+   python quiz_results.py preview '<entire pasted text>'
+   ```
+   The output is one JSON object:
+   - `{"error": "..."}` → show the message to the parent and **stop, writing nothing**. A checksum failure means "the code looks corrupted — please re-paste it"; a missing-session error means there is no session for that date.
+   - otherwise `{date, exists, correct, total, graded:[{id, exercise, description, stored, child, correct, type}]}`. Blank (`""`) and excluded/absent questions are already omitted.
+
+2. **Show the summary** (English). One line per `graded` entry — its `exercise`, the child's `child` answer, and ✓/✗ — then `Correct: {correct} of {total}`. Note any omitted questions as skipped.
+
+3. **Confirm before writing.** Ask: "Write results for {date}?" If `exists` is true, warn that this overwrites and re-processes the existing results.
+
+4. **Write** on confirmation:
+   ```bash
+   python quiz_results.py write '<entire pasted text>'
+   ```
+   (`write` auto-forces when `results.json` already exists; add `--force` to be explicit.) The output JSON includes `reprocessed` (true when the date already had results). The child's raw answer is recorded as each result's note.
+
+5. **Analyze** — feed progress, choosing the path that avoids double-counting (see below):
+   - first-time (`reprocessed` is false): `python analyze.py {date}`
+   - re-processing (`reprocessed` is true): `python analyze.py --rebuild`
+
+6. **Focus line.** Display the analyze output, then add: "Tomorrow: focus on {weakest_topic} ({rate}% correct)." — same tail as Verbal mode.
 
 ## Behavior
 
