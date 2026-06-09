@@ -1,1 +1,127 @@
-{}
+{
+  "topics": {
+    "multiplication-table": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "facts": {
+        "5×6": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "6×8": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "4×10": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        }
+      },
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "addition": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "add:374+619",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "subtraction": {
+      "correct_rate": 0.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "sub:360-113",
+          "date": "2026-06-09",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "division": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "div:84÷4",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "fraction-comparison": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "frac-cmp:3/5vs3/8",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "fraction-addition": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "frac-add:3/3+6/6",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    }
+  }
+}
