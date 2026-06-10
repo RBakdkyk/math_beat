@@ -19,6 +19,7 @@ TOPICS = {
     "fraction-subtraction":   {"name": "Fraction Subtraction",  "hours":  7},
     "measurements-area":      {"name": "Area",                   "hours":  6},
     "measurements-perimeter": {"name": "Perimeter",              "hours":  5},
+    "volume-surface-area":    {"name": "Volume & Surface Area",  "hours":  4},
     "exponents":              {"name": "Exponents",              "hours":  3},
     "natural-numbers":        {"name": "Natural Numbers",        "hours": 10},
     "arithmetic-sequences":   {"name": "Arithmetic Sequences",   "hours":  6},
@@ -59,6 +60,7 @@ BLOCK_HEADERS = {
     "fraction-subtraction":   "Fraction Subtraction",
     "measurements-area":      "Area",
     "measurements-perimeter": "Perimeter",
+    "volume-surface-area":    "Volume & Surface Area",
     "exponents":              "Exponents",
     "natural-numbers":        "Natural Numbers",
     "arithmetic-sequences":   "Arithmetic Sequences",
@@ -513,6 +515,42 @@ def _measurements_perimeter(difficulty: str) -> dict:
               f"perim:{l}×{w}")
 
 
+def _volume_surface_area(difficulty: str) -> dict:
+    """נפח תיבה ושטח פנים (Ministry ח.2) — cuboid volume and surface area.
+
+    Volume = a×b×c (cm³ / סמ"ק); surface area = 2(ab+bc+ca) (cm² / סמ"ר). Tiers
+    scale the cuboid's dimensions over disjoint ranges (easy 2–4, medium 5–8,
+    hard 9–15). Numeric answers, `volume:`/`surface:` signatures; phrased like
+    the `measurements-*` topics.
+    """
+    if difficulty == "easy":
+        lo, hi = 2, 4
+    elif difficulty == "hard":
+        lo, hi = 9, 15
+    else:
+        lo, hi = 5, 8
+    a, b, c = (random.randint(lo, hi) for _ in range(3))
+    unit = "ס\"מ"
+    dims = f"אורך {a} {unit}, רוחב {b} {unit}, גובה {c} {unit}"
+
+    if random.random() < 0.5:
+        volume = a * b * c
+        desc = random.choice([
+            f"מה נפח התיבה? ({dims})",
+            f"חשב/י נפח תיבה: {dims}",
+        ])
+        return _q(desc, f"{a} × {b} × {c} =", f"{volume} סמ\"ק", "numeric",
+                  "volume-surface-area", f"volume:{a}×{b}×{c}")
+
+    surface = 2 * (a * b + b * c + a * c)
+    desc = random.choice([
+        f"מה שטח הפנים של התיבה? ({dims})",
+        f"חשב/י שטח פנים של תיבה: {dims}",
+    ])
+    return _q(desc, f"2 × ({a}×{b} + {b}×{c} + {a}×{c}) =", f"{surface} סמ\"ר",
+              "numeric", "volume-surface-area", f"surface:{a}×{b}×{c}")
+
+
 def _exponents(difficulty: str) -> dict:
     # Introductory notation topic (L463); exp ≤ 3. Hard adds conceptual variety
     # (inverse, commutativity-check) per L468/L474, not bigger magnitudes.
@@ -702,6 +740,7 @@ _GENERATORS = {
     "fraction-subtraction":   _fraction_subtraction,
     "measurements-area":      _measurements_area,
     "measurements-perimeter": _measurements_perimeter,
+    "volume-surface-area":    _volume_surface_area,
     "exponents":              _exponents,
     "natural-numbers":        _natural_numbers,
     "arithmetic-sequences":   _arithmetic_sequences,

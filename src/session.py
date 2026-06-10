@@ -30,6 +30,12 @@ TOPIC_ALIASES = {
 
 VALID_LEVELS = {"easy", "medium", "hard"}
 
+# Priority score of a never-practiced topic (correct_rate 0.5, 0 practices,
+# infinitely stale): 0.5*0.5 + 1.0*0.3 + 1.0*0.2 = 0.75. A confirmed weakness
+# (a practiced topic answered wrong) must rank at least this high — see
+# _topic_priority.
+NEVER_PRACTICED_BASELINE = 0.75
+
 
 def resolve_topic_alias(key: str) -> list | None:
     """Resolve an override key to the list of qtypes it covers.
@@ -123,7 +129,38 @@ def _topic_priority(qtype: str, tdata: dict) -> float:
     # Coverage: fewer times → higher priority (caps at 10 sessions)
     coverage_score = max(0.0, 1.0 - times_practiced / 10.0)
 
-    return weakness_score * 0.5 + staleness_score * 0.3 + coverage_score * 0.2
+    score = weakness_score * 0.5 + staleness_score * 0.3 + coverage_score * 0.2
+
+    # Weakness must never rank below mere unfamiliarity: a topic that has been
+    # practiced and answered wrong is a confirmed weakness and should sit at
+    # least at the never-practiced baseline. Floor the score in proportion to
+    # how wrong it is — a fully-wrong topic (correct_rate 0.0) reaches the
+    # baseline; a partly-wrong one lands proportionally below it. This stays
+    # pure weakness rotation (no curriculum-hours weighting).
+    if times_practiced > 0:
+        score = max(score, weakness_score * NEVER_PRACTICED_BASELINE)
+
+    return score
+
+
+def _zone_counts(count: int) -> tuple:
+    """Map a total question count to (warmup, primary, rotation) counts.
+
+    The three zones always sum exactly to `count` for any count ≥ 1 (`--count`
+    is unclamped). Warmup shrinks first for small counts (`min(3, count)`); the
+    primary-drill depth is 2 when the post-warmup remainder is ≥ 4, else 1 (or 0
+    when there is no remainder); the rest are 1-each rotation slots.
+    """
+    warmup = min(3, max(0, count))
+    remainder = count - warmup
+    if remainder <= 0:
+        primary = 0
+    elif remainder >= 4:
+        primary = 2
+    else:
+        primary = 1
+    rotation = remainder - primary
+    return warmup, primary, rotation
 
 
 def _prioritized_topics(summary: dict, exclude: set = None) -> list:
@@ -159,7 +196,7 @@ def _weakest_mult_facts(summary: dict, n: int = 3) -> list:
 
 
 def build_session_plan(
-    count: int = 8,
+    count: int = 10,
     topics_override: list = None,
     difficulty_override: str = None,
     difficulty_map: dict = None,
@@ -168,7 +205,8 @@ def build_session_plan(
 
     Without overrides, uses progress data to decide structure:
       - 3 warmup (multiplication-table, targeting weak facts)
-      - remaining split between weakest and second-weakest topics
+      - 2-deep primary drill on the top-priority topic
+      - 1-each rotation across the next distinct topics in priority order
 
     With overrides:
       - topics_override: list of qtypes to use exclusively
@@ -249,10 +287,17 @@ def _adaptive_plan(
     difficulty: str = None,
     difficulty_map: dict = None,
 ) -> list:
-    """Session plan driven by progress data."""
+    """Session plan driven by progress data.
+
+    Zoned spread: warmup (multiplication, weak facts) + primary depth on the
+    #1-priority topic + 1-each rotation across the next distinct topics in
+    priority order. There is no separate "coverage" pick — least-touched topics
+    already rank at the top of `_topic_priority`, so long-tail breadth falls out
+    of the distinct-topic spread (a default 8-question session yields ≥5 distinct
+    topics).
+    """
     plan = []
-    warmup_count = min(3, count)
-    remaining = count - warmup_count
+    warmup_count, primary_count, rotation_count = _zone_counts(count)
 
     # Warmup: multiplication, targeting weak facts (tier is not auto-inferred)
     warmup_diff = _warmup_difficulty(difficulty_map, difficulty)
@@ -263,25 +308,27 @@ def _adaptive_plan(
             entry["target_fact"] = weak_facts[i]
         plan.append(entry)
 
-    # Get priority-sorted topics (excluding warmup)
+    # Priority-sorted distinct topics (excluding the warmup topic)
     sorted_topics = _prioritized_topics(summary, exclude={"multiplication-table"})
     if not sorted_topics:
         sorted_topics = ["fraction-addition", "division"]
 
-    main_topic = sorted_topics[0]
-    secondary_topic = sorted_topics[1] if len(sorted_topics) > 1 else sorted_topics[0]
+    # Primary depth on the top-priority topic, then one each across the next
+    # distinct topics in priority order. Exhaustion fallback: only once every
+    # distinct topic has been used do we cycle back and repeat (not reachable
+    # with ~17 template topics, but defined for safety).
+    slots = []
+    if primary_count > 0:
+        slots.extend([sorted_topics[0]] * primary_count)
+        rotation_pool = sorted_topics[1:] or sorted_topics
+    else:
+        rotation_pool = sorted_topics
+    for i in range(rotation_count):
+        slots.append(rotation_pool[i % len(rotation_pool)])
 
-    # Allocate: 60-70% to main, 30-40% to secondary
-    main_count = max(1, int(remaining * 0.65))
-    secondary_count = remaining - main_count
-
-    main_diff = resolve_difficulty(main_topic, difficulty_map, difficulty, summary)
-    sec_diff = resolve_difficulty(secondary_topic, difficulty_map, difficulty, summary)
-
-    for _ in range(main_count):
-        plan.append({"qtype": main_topic, "difficulty": main_diff})
-    for _ in range(secondary_count):
-        plan.append({"qtype": secondary_topic, "difficulty": sec_diff})
+    for qtype in slots:
+        diff = resolve_difficulty(qtype, difficulty_map, difficulty, summary)
+        plan.append({"qtype": qtype, "difficulty": diff})
 
     return plan
 

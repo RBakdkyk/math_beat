@@ -17,7 +17,7 @@ from wiki import generated_path, write_generated, today as wiki_today
 def main():
     parser = argparse.ArgumentParser(description="Generate a math practice session for Ayala.")
     parser.add_argument("--topics", nargs="+", help="Question types to include (overrides auto-selection)")
-    parser.add_argument("--count", type=int, default=8, help="Number of questions (default: 8)")
+    parser.add_argument("--count", type=int, default=10, help="Number of questions (default: 10)")
     parser.add_argument(
         "--difficulty",
         nargs="+",

@@ -51,9 +51,12 @@ python -c "import sys; sys.path.insert(0,'src'); from wiki import generated_path
 
 ### 3. Show progress context
 
-Read `wiki/progress/summary.json`. If it exists, show one line:
+Read `wiki/progress/summary.json`. If it exists, show one line. The zoned planner
+spreads each session across several distinct weak topics rather than choosing one
+main topic, so the summary keeps the multiplication-warmup context only — do NOT
+name a single main topic:
 ```
-Today's focus: multiplication ({mult_rate}% correct) + {main_topic} ({rate}% correct). Weak facts: {weak_facts}
+Focus today: multiplication ({mult_rate}% correct), plus rotating practice across the weakest topics. Weak facts: {weak_facts}
 ```
 
 If no summary.json: "First diagnostic session — starting at an easy pace."
