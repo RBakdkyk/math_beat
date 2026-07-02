@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+.env
+.venv/
+# generated quizzes bake in PARENT_WHATSAPP — keep them out of commits
+wiki/sessions/*/quiz.html

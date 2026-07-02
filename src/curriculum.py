@@ -19,6 +19,7 @@ TOPICS = {
     "fraction-subtraction":   {"name": "Fraction Subtraction",  "hours":  7},
     "measurements-area":      {"name": "Area",                   "hours":  6},
     "measurements-perimeter": {"name": "Perimeter",              "hours":  5},
+    "volume-surface-area":    {"name": "Volume & Surface Area",  "hours":  4},
     "exponents":              {"name": "Exponents",              "hours":  3},
     "natural-numbers":        {"name": "Natural Numbers",        "hours": 10},
     "arithmetic-sequences":   {"name": "Arithmetic Sequences",   "hours":  6},
@@ -34,9 +35,19 @@ TOPICS = {
 CLAUDE_TOPICS = {"word-problems", "geometry", "probability", "symmetry"}
 TEMPLATE_TOPICS = {k for k in TOPICS if k not in CLAUDE_TOPICS}
 
+# Topics that require a drawn figure and therefore cannot be presented in a
+# static HTML quiz. Everything else — including word-problems and probability,
+# which are text plus a machine-checkable answer — is quiz-renderable.
+NEEDS_VISUAL_TOPICS = {"geometry", "symmetry"}
+
+
+def is_quiz_renderable(qtype: str) -> bool:
+    """True if a topic can be presented in the static HTML quiz (no figure needed)."""
+    return qtype not in NEEDS_VISUAL_TOPICS
+
 # Block headers for WhatsApp output
 BLOCK_HEADERS = {
-    "multiplication-table":  "Warmup - Multiplication Table",
+    "multiplication-table":  "Multiplication Table",
     "addition":               "Addition",
     "subtraction":            "Subtraction",
     "multiplication":         "Multiplication",
@@ -49,6 +60,7 @@ BLOCK_HEADERS = {
     "fraction-subtraction":   "Fraction Subtraction",
     "measurements-area":      "Area",
     "measurements-perimeter": "Perimeter",
+    "volume-surface-area":    "Volume & Surface Area",
     "exponents":              "Exponents",
     "natural-numbers":        "Natural Numbers",
     "arithmetic-sequences":   "Arithmetic Sequences",
@@ -68,8 +80,16 @@ MULTIPLICATION_FACTS = [
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str) -> dict:
-    return {
+def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str,
+       widget: str = "text", options: list = None) -> dict:
+    """Build a question dict.
+
+    `widget` ("text"|"choice") and `options` are emitted explicitly by each
+    generator so the quiz wrap step never has to infer the input shape from
+    `type`/`answer_type` (one `type` can mix numeric, typed-string, and yes/no
+    shapes). Numeric/fraction/typed-string answers use the default "text".
+    """
+    q = {
         "description": desc,
         "exercise": exercise,
         "answer": str(answer),
@@ -77,7 +97,11 @@ def _q(desc: str, exercise: str, answer, answer_type: str, qtype: str, sig: str)
         "type": qtype,
         "subtopic": qtype,
         "signature": sig,
+        "widget": widget,
     }
+    if options is not None:
+        q["options"] = options
+    return q
 
 
 def _frac_str(f: Frac) -> str:
@@ -141,12 +165,7 @@ def _prime_factors(n: int) -> list:
 # ─── Individual question generators ──────────────────────────────────────────
 
 def _mult_table(difficulty: str) -> dict:
-    pools = {
-        "easy":   [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 5 and b <= 5],
-        "medium": [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 8],
-        "hard":   MULTIPLICATION_FACTS,
-    }
-    a, b = random.choice(pools.get(difficulty, pools["medium"]))
+    a, b = random.choice(MULTIPLICATION_FACTS)
     result = a * b
     choice = random.randint(0, 5)
     if choice == 0:
@@ -317,7 +336,8 @@ def _prime_composite(difficulty: str) -> dict:
         "ראשוני או פריק?",
         "בדוק/י: ראשוני או פריק?",
     ])
-    return _q(desc, str(n), answer, "categorical", "prime-composite", f"prime:{n}")
+    return _q(desc, str(n), answer, "categorical", "prime-composite", f"prime:{n}",
+              widget="choice", options=["ראשוני", "פריק"])
 
 
 def _divisibility(difficulty: str) -> dict:
@@ -332,7 +352,8 @@ def _divisibility(difficulty: str) -> dict:
     lo, hi = n_ranges.get(difficulty, (20, 200))
     n = random.randint(lo, hi)
     answer = "כן" if n % d == 0 else "לא"
-    return _q("האם מתחלק? (כן/לא)", f"{n} ÷ {d}", answer, "categorical", "divisibility", f"divides:{d}|{n}")
+    return _q("האם מתחלק? (כן/לא)", f"{n} ÷ {d}", answer, "categorical", "divisibility", f"divides:{d}|{n}",
+              widget="choice", options=["כן", "לא"])
 
 
 # Valid denominator pairs for grade 4 fraction operations.
@@ -388,8 +409,11 @@ def _fraction_comparison(difficulty: str) -> dict:
         "איזה שבר גדול יותר?",
         "השווי:",
     ])
+    # Presented in the quiz as a symbol choice with the canonical "סמני > או < או ="
+    # prompt regardless of which `desc` variant was stored; the stored answer stays
+    # the larger fraction (or "שווים"), and the /results grader derives the symbol.
     return _q(desc, f"{a}/{d1} ___ {b}/{d2}", answer, "categorical", "fraction-comparison",
-              f"frac-cmp:{a}/{d1}vs{b}/{d2}")
+              f"frac-cmp:{a}/{d1}vs{b}/{d2}", widget="choice", options=[">", "<", "="])
 
 
 def _fraction_addition(difficulty: str) -> dict:
@@ -463,10 +487,10 @@ def _measurements_area(difficulty: str) -> dict:
     unit = random.choice(["ס\"מ", "מ'"])
     unit_sq = "סמ\"ר" if unit == "ס\"מ" else "מ\"ר"
     desc = random.choice([
-        f"מה שטח המלבן? (אורך {l} {unit}, רוחב {w} {unit})",
-        f"חשב/י שטח מלבן: אורך {l} {unit}, רוחב {w} {unit}",
-    ])
-    return _q(desc, f"{l} × {w} =", f"{l * w} {unit_sq}", "numeric", "measurements-area",
+        f"מה שטח המלבן שאורכו {l} {unit} ורוחבו {w} {unit}?",
+        f"חשב/י שטח מלבן: אורך {l} {unit}, רוחב {w} {unit}.",
+    ]) + " נוסחה: שטח = אורך × רוחב"
+    return _q(desc, "", f"{l * w} {unit_sq}", "numeric", "measurements-area",
               f"area:{l}×{w}")
 
 
@@ -479,11 +503,47 @@ def _measurements_perimeter(difficulty: str) -> dict:
         l, w = random.randint(5, 20), random.randint(2, 9)
     unit = random.choice(["ס\"מ", "מ'"])
     desc = random.choice([
-        f"מה היקף המלבן? (אורך {l} {unit}, רוחב {w} {unit})",
-        f"חשב/י היקף מלבן: אורך {l} {unit}, רוחב {w} {unit}",
-    ])
-    return _q(desc, f"2 × ({l} + {w}) =", f"{2 * (l + w)} {unit}", "numeric", "measurements-perimeter",
+        f"מה היקף המלבן שאורכו {l} {unit} ורוחבו {w} {unit}?",
+        f"חשב/י היקף מלבן: אורך {l} {unit}, רוחב {w} {unit}.",
+    ]) + " נוסחה: היקף = 2 × (אורך + רוחב)"
+    return _q(desc, "", f"{2 * (l + w)} {unit}", "numeric", "measurements-perimeter",
               f"perim:{l}×{w}")
+
+
+def _volume_surface_area(difficulty: str) -> dict:
+    """נפח תיבה ושטח פנים (Ministry ח.2) — cuboid volume and surface area.
+
+    Volume = a×b×c (cm³ / סמ"ק); surface area = 2(ab+bc+ca) (cm² / סמ"ר). Tiers
+    scale the cuboid's dimensions over disjoint ranges (easy 2–4, medium 5–8,
+    hard 9–15). Numeric answers, `volume:`/`surface:` signatures; phrased like
+    the `measurements-*` topics.
+    """
+    if difficulty == "easy":
+        lo, hi = 2, 4
+    elif difficulty == "hard":
+        lo, hi = 9, 15
+    else:
+        lo, hi = 5, 8
+    a, b, c = (random.randint(lo, hi) for _ in range(3))
+    unit = "ס\"מ"
+    dims = f"אורך {a} {unit}, רוחב {b} {unit}, גובה {c} {unit}"
+
+    if random.random() < 0.5:
+        volume = a * b * c
+        desc = random.choice([
+            f"מה נפח התיבה? ({dims})",
+            f"חשב/י נפח תיבה: {dims}.",
+        ]) + " נוסחה: נפח = אורך × רוחב × גובה"
+        return _q(desc, "", f"{volume} סמ\"ק", "numeric",
+                  "volume-surface-area", f"volume:{a}×{b}×{c}")
+
+    surface = 2 * (a * b + b * c + a * c)
+    desc = random.choice([
+        f"מה שטח הפנים של התיבה? ({dims})",
+        f"חשב/י שטח פנים של תיבה: {dims}.",
+    ]) + " נוסחה: שטח פנים = 2 × (אורך×רוחב + רוחב×גובה + אורך×גובה)"
+    return _q(desc, "", f"{surface} סמ\"ר",
+              "numeric", "volume-surface-area", f"surface:{a}×{b}×{c}")
 
 
 def _exponents(difficulty: str) -> dict:
@@ -520,7 +580,8 @@ def _exponents(difficulty: str) -> dict:
             b = random.choice([2, 3, 4, 5])
     answer = "כן" if a ** b == b ** a else "לא"
     return _q("האם שווה? (כן/לא)", f"{a}^{b} = {b}^{a}", answer,
-              "categorical", "exponents", f"exp-cmp:{a}^{b}vs{b}^{a}")
+              "categorical", "exponents", f"exp-cmp:{a}^{b}vs{b}^{a}",
+              widget="choice", options=["כן", "לא"])
 
 
 def _equations_unknown(difficulty: str) -> dict:
@@ -674,6 +735,7 @@ _GENERATORS = {
     "fraction-subtraction":   _fraction_subtraction,
     "measurements-area":      _measurements_area,
     "measurements-perimeter": _measurements_perimeter,
+    "volume-surface-area":    _volume_surface_area,
     "exponents":              _exponents,
     "natural-numbers":        _natural_numbers,
     "arithmetic-sequences":   _arithmetic_sequences,

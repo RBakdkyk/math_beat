@@ -17,7 +17,7 @@ from wiki import generated_path, write_generated, today as wiki_today
 def main():
     parser = argparse.ArgumentParser(description="Generate a math practice session for Ayala.")
     parser.add_argument("--topics", nargs="+", help="Question types to include (overrides auto-selection)")
-    parser.add_argument("--count", type=int, default=8, help="Number of questions (default: 8)")
+    parser.add_argument("--count", type=int, default=10, help="Number of questions (default: 10)")
     parser.add_argument(
         "--difficulty",
         nargs="+",
@@ -26,6 +26,8 @@ def main():
     )
     parser.add_argument("--date", default=None, help="Session date YYYY-MM-DD (default: today)")
     parser.add_argument("--force", action="store_true", help="Overwrite existing session")
+    parser.add_argument("--html", action="store_true",
+                        help="Also wrap the session into a self-contained quiz.html")
     args = parser.parse_args()
 
     difficulty_global = None
@@ -69,6 +71,19 @@ def main():
 
     formatted = format_session(questions, session_date)
     print(formatted)
+
+    if args.html:
+        from quiz import write_quiz, QuizError
+        try:
+            out_path, n_rendered, excluded = write_quiz(
+                session_date, questions, force=args.force,
+                warn=lambda m: print(m, file=sys.stderr),
+            )
+        except QuizError as e:
+            print(e, file=sys.stderr)
+            sys.exit(1)
+        print(f"\nWrote {out_path} ({n_rendered} questions"
+              + (f", {len(excluded)} excluded" if excluded else "") + ").")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,111 @@
+[
+  {
+    "description": "מה המכפלה?",
+    "exercise": "5 × 6 =",
+    "answer": "30",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:5×6",
+    "widget": "text",
+    "id": 1,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י:",
+    "exercise": "6 × 8 =",
+    "answer": "48",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:6×8",
+    "widget": "text",
+    "id": 2,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חשב/י את המכפלה:",
+    "exercise": "4 × 10 =",
+    "answer": "40",
+    "answer_type": "numeric",
+    "type": "multiplication-table",
+    "subtopic": "multiplication-table",
+    "signature": "mult:4×10",
+    "widget": "text",
+    "id": 3,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "מה הסכום?",
+    "exercise": "374 + 619 =",
+    "answer": "993",
+    "answer_type": "numeric",
+    "type": "addition",
+    "subtopic": "addition",
+    "signature": "add:374+619",
+    "widget": "text",
+    "id": 4,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "מה ההפרש?",
+    "exercise": "360 - 113 =",
+    "answer": "247",
+    "answer_type": "numeric",
+    "type": "subtraction",
+    "subtopic": "subtraction",
+    "signature": "sub:360-113",
+    "widget": "text",
+    "id": 5,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "חלק/י:",
+    "exercise": "84 ÷ 4 =",
+    "answer": "21",
+    "answer_type": "numeric",
+    "type": "division",
+    "subtopic": "division",
+    "signature": "div:84÷4",
+    "widget": "text",
+    "id": 6,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "איזה שבר גדול יותר?",
+    "exercise": "3/5 ___ 3/8",
+    "answer": "3/5",
+    "answer_type": "categorical",
+    "type": "fraction-comparison",
+    "subtopic": "fraction-comparison",
+    "signature": "frac-cmp:3/5vs3/8",
+    "widget": "choice",
+    "options": [
+      ">",
+      "<",
+      "="
+    ],
+    "id": 7,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  },
+  {
+    "description": "מה הסכום?",
+    "exercise": "3/3 + 6/6 =",
+    "answer": "2",
+    "answer_type": "numeric",
+    "type": "fraction-addition",
+    "subtopic": "fraction-addition",
+    "signature": "frac-add:3/3+6/6",
+    "widget": "text",
+    "id": 8,
+    "date": "2026-06-09",
+    "difficulty": "medium"
+  }
+]

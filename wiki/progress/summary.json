@@ -1,1 +1,323 @@
-{}
+{
+  "topics": {
+    "multiplication-table": {
+      "correct_rate": 0.857,
+      "times_practiced": 3,
+      "last_practiced": "2026-06-18",
+      "facts": {
+        "5×6": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "6×8": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "4×10": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-09",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "8×8": {
+          "correct": 0,
+          "wrong": 1,
+          "last_seen": "2026-06-13",
+          "by_difficulty": {
+            "medium": {
+              "correct": 0,
+              "wrong": 1
+            }
+          }
+        },
+        "5×10": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-13",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "6×7": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-18",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        },
+        "10×10": {
+          "correct": 1,
+          "wrong": 0,
+          "last_seen": "2026-06-18",
+          "by_difficulty": {
+            "medium": {
+              "correct": 1,
+              "wrong": 0
+            }
+          }
+        }
+      },
+      "difficulty_rates": {
+        "medium": 0.857
+      }
+    },
+    "addition": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "add:374+619",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "subtraction": {
+      "correct_rate": 0.333,
+      "times_practiced": 2,
+      "last_practiced": "2026-06-13",
+      "used_params": [
+        {
+          "sig": "sub:360-113",
+          "date": "2026-06-09",
+          "correct": false,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "sub:474-331",
+          "date": "2026-06-13",
+          "correct": false,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "sub:662-305",
+          "date": "2026-06-13",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.333
+      }
+    },
+    "division": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "div:84÷4",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "fraction-comparison": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "frac-cmp:3/5vs3/8",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "fraction-addition": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-09",
+      "used_params": [
+        {
+          "sig": "frac-add:3/3+6/6",
+          "date": "2026-06-09",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "volume-surface-area": {
+      "correct_rate": 0.0,
+      "times_practiced": 2,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "volume:8×7×7",
+          "date": "2026-06-13",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "order-of-operations": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-13",
+      "used_params": [
+        {
+          "sig": "orderops:14 × 3 + 13",
+          "date": "2026-06-13",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "natural-numbers": {
+      "correct_rate": 0.0,
+      "times_practiced": 2,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "natnum:51378-pos3",
+          "date": "2026-06-13",
+          "correct": false,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "natnum:39048-pos4",
+          "date": "2026-06-18",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "multiplication-by-tens": {
+      "correct_rate": 1.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-13",
+      "used_params": [
+        {
+          "sig": "mult-tens:19×200",
+          "date": "2026-06-13",
+          "correct": true,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 1.0
+      }
+    },
+    "multiplication": {
+      "correct_rate": 0.0,
+      "times_practiced": 2,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "mult-long:33×18",
+          "date": "2026-06-13",
+          "correct": false,
+          "difficulty": "medium"
+        },
+        {
+          "sig": "mult-long:36×17",
+          "date": "2026-06-18",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "measurements-perimeter": {
+      "correct_rate": 0.0,
+      "times_practiced": 2,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "perim:16×8",
+          "date": "2026-06-13",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "fraction-subtraction": {
+      "correct_rate": 0.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "frac-sub:2/4-1/8",
+          "date": "2026-06-18",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    },
+    "exponents": {
+      "correct_rate": 0.0,
+      "times_practiced": 1,
+      "last_practiced": "2026-06-18",
+      "used_params": [
+        {
+          "sig": "exp:2^3",
+          "date": "2026-06-18",
+          "correct": false,
+          "difficulty": "medium"
+        }
+      ],
+      "difficulty_rates": {
+        "medium": 0.0
+      }
+    }
+  }
+}

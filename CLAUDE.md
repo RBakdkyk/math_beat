@@ -38,11 +38,11 @@ grep -i -A 5 "divisor" src/curriculum_knowledge.md
 
 All question generation must align with what it says.
 
-## Multiplication Table — Key Practice Priority
+## Multiplication Table — Mastered
 
-The kita4 curriculum assumes table facts (1×1–10×10) are mastered from grade 3, but Ayala needs to strengthen them — this is the primary reason the app exists. Every session starts with 3 multiplication warmup questions targeting her weakest facts.
+Ayala has mastered the multiplication table (1×1–10×10), so it's no longer forced as a warmup in every session. It now competes in the normal topic rotation like any other subject, and is auto-deprioritized while her correct rate stays high.
 
-The 55 unique facts (commutativity-deduplicated) are defined in `src/curriculum.py` as `MULTIPLICATION_FACTS`. Progress is tracked per-fact in `summary.json` under `topics.multiplication-table.facts`.
+The 55 unique facts (commutativity-deduplicated) are defined in `src/curriculum.py` as `MULTIPLICATION_FACTS`. Progress is still tracked per-fact in `summary.json` under `topics.multiplication-table.facts`.
 
 ## Conventions
 

@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "correct": true,
+    "note": "answered '30'"
+  },
+  {
+    "id": 2,
+    "correct": true,
+    "note": "answered '48'"
+  },
+  {
+    "id": 3,
+    "correct": true,
+    "note": "answered '40'"
+  },
+  {
+    "id": 4,
+    "correct": true,
+    "note": "answered '993'"
+  },
+  {
+    "id": 5,
+    "correct": false,
+    "note": "answered '193' (expected 247)"
+  },
+  {
+    "id": 6,
+    "correct": true,
+    "note": "answered '21'"
+  },
+  {
+    "id": 7,
+    "correct": true,
+    "note": "tapped the correct > symbol; quiz UI bidi-mirrored it to '<' (display bug, since fixed)"
+  },
+  {
+    "id": 8,
+    "correct": true,
+    "note": "answered '2'"
+  }
+]
