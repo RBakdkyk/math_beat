@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "correct": false,
+    "note": "answered '48' (expected 8)"
+  },
+  {
+    "id": 2,
+    "correct": true,
+    "note": "answered '10'"
+  },
+  {
+    "id": 3,
+    "correct": false,
+    "note": "answered '141' (expected 143)"
+  },
+  {
+    "id": 4,
+    "correct": true,
+    "note": "answered '357'"
+  },
+  {
+    "id": 5,
+    "correct": false,
+    "note": "answered 'לא למדנו נפח' (expected 392 סמ\"ק)"
+  },
+  {
+    "id": 6,
+    "correct": true,
+    "note": "answered '55'"
+  },
+  {
+    "id": 7,
+    "correct": false,
+    "note": "answered '51' (expected 1)"
+  },
+  {
+    "id": 8,
+    "correct": true,
+    "note": "answered '3,800'"
+  },
+  {
+    "id": 9,
+    "correct": false,
+    "note": "answered '307' (expected 594)"
+  },
+  {
+    "id": 10,
+    "correct": false,
+    "note": "answered '104' (expected 48 מ')"
+  }
+]

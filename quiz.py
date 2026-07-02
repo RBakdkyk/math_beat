@@ -62,6 +62,40 @@ def build_html(date: str, wa_number: str, rendered: list) -> str:
     )
 
 
+class QuizError(Exception):
+    """A user-facing failure while wrapping a session into quiz.html."""
+
+
+def write_quiz(date: str, questions: list, force: bool = False, warn=None) -> tuple:
+    """Render `questions` to <session>/quiz.html for `date`.
+
+    Returns (out_path, n_rendered, excluded). Raises QuizError with a
+    user-facing message on any failure (missing WhatsApp number, nothing
+    renderable, or an existing file without `force`). `warn`, if given, is
+    called once per excluded needs-visual question with a formatted message.
+    """
+    wa_number = parent_whatsapp()
+    if not wa_number:
+        raise QuizError("PARENT_WHATSAPP must be set in .env (e.g. PARENT_WHATSAPP=+972 50-123-4567).")
+
+    rendered, excluded = _render_data(questions)
+    if warn:
+        for q in excluded:
+            warn(f"Warning: excluding needs-visual question id={q['id']} "
+                 f"({q.get('type')}): {q.get('description','')} {q.get('exercise','')}".rstrip())
+
+    if not rendered:
+        raise QuizError(f"No quiz-renderable questions for {date}; nothing written.")
+
+    out_path = session_dir(date) / "quiz.html"
+    if out_path.exists() and not force:
+        raise QuizError(f"{out_path} already exists. Pass --force to overwrite.")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(build_html(date, wa_number, rendered), encoding="utf-8")
+    return out_path, len(rendered), excluded
+
+
 def main():
     parser = argparse.ArgumentParser(description="Wrap a session into a self-contained HTML quiz.")
     parser.add_argument("date", help="Session date YYYY-MM-DD")
@@ -74,30 +108,16 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
-    wa_number = parent_whatsapp()
-    if not wa_number:
-        print("PARENT_WHATSAPP must be set in .env (e.g. PARENT_WHATSAPP=+972 50-123-4567).",
-              file=sys.stderr)
+    try:
+        out_path, n_rendered, excluded = write_quiz(
+            args.date, questions, force=args.force,
+            warn=lambda m: print(m, file=sys.stderr),
+        )
+    except QuizError as e:
+        print(e, file=sys.stderr)
         sys.exit(1)
 
-    rendered, excluded = _render_data(questions)
-    for q in excluded:
-        print(f"Warning: excluding needs-visual question id={q['id']} "
-              f"({q.get('type')}): {q.get('description','')} {q.get('exercise','')}".rstrip(),
-              file=sys.stderr)
-
-    if not rendered:
-        print(f"No quiz-renderable questions for {args.date}; nothing written.", file=sys.stderr)
-        sys.exit(1)
-
-    out_path = session_dir(args.date) / "quiz.html"
-    if out_path.exists() and not args.force:
-        print(f"{out_path} already exists. Pass --force to overwrite.", file=sys.stderr)
-        sys.exit(1)
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(build_html(args.date, wa_number, rendered), encoding="utf-8")
-    print(f"Wrote {out_path} ({len(rendered)} questions"
+    print(f"Wrote {out_path} ({n_rendered} questions"
           + (f", {len(excluded)} excluded" if excluded else "") + ").")
 
 

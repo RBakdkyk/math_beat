@@ -40,7 +40,8 @@ def format_session(questions: list, session_date: str) -> str:
 
         if "description" in q:
             lines.append(f"{q['id']}. {q['description']}")
-            lines.append(f"   {q['exercise']}")
+            if q.get("exercise"):
+                lines.append(f"   {q['exercise']}")
         else:
             lines.append(f"{q['id']}. {q.get('he', '')}")
 

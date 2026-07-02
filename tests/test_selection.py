@@ -6,8 +6,8 @@ Run: python tests/test_selection.py
 Covers change `add-difficulty-selection-controls`:
   - per-topic override > global --difficulty > auto _infer_difficulty
   - override no-ops when its topic isn't selected; honored when forced/--topics
-  - advanced pitch: bootstrap non-warmup = medium; _infer thresholds shifted
-  - multiplication-table override keeps weak-fact targeting
+  - advanced pitch: bootstrap slots = medium; _infer thresholds shifted
+  - multiplication-table is a regular topic now (no warmup, no weak-fact targeting)
   - invalid --difficulty tokens raise a clear error (function + CLI)
 
 Separate from tests/test_bands.py (change A's band invariants).
@@ -64,29 +64,29 @@ check(
     "_infer_difficulty(0.7) must be hard under shifted thresholds",
 )
 check(
-    S._infer_difficulty({"topics": {"x": {"correct_rate": 0.2}}}, "x") == "easy",
-    "_infer_difficulty(0.2) must be easy",
+    S._infer_difficulty({"topics": {"x": {"correct_rate": 0.2}}}, "x") == "medium",
+    "_infer_difficulty(0.2) must floor at medium (auto-inference never picks easy)",
 )
 check(
     S._infer_difficulty({"topics": {"x": {"correct_rate": 0.5}}}, "x") == "medium",
     "_infer_difficulty(0.5) must be medium",
 )
-# Old 0.4/0.8 split would have called 0.7 medium and 0.35 easy — guard the skew.
+# Auto-inference floors at medium for an advanced student; easy is reachable
+# only via an explicit --difficulty/per-topic override.
 check(
-    S._infer_difficulty({"topics": {"x": {"correct_rate": 0.35}}}, "x") == "medium",
-    "0.35 must be medium (not easy) under the shifted easy<0.3 threshold",
+    S._infer_difficulty({"topics": {"x": {"correct_rate": 0.0}}}, "x") == "medium",
+    "0.0 must be medium (not easy) — auto-inference never eases off",
 )
 
 
-# ── 3. Bootstrap path: medium non-warmup + override honored ──────────────────
+# ── 3. Bootstrap path: medium slots + override honored ───────────────────────
 S.read_summary = lambda: {}
 
 boot = S._bootstrap_plan(8)
-nonwarm = [s for s in boot if s["qtype"] != "multiplication-table"]
-check(bool(nonwarm), "bootstrap must produce non-warmup slots")
+check(bool(boot), "bootstrap must produce slots")
 check(
-    all(s["difficulty"] == "medium" for s in nonwarm),
-    "bootstrap non-warmup slots must start at medium, not easy",
+    all(s["difficulty"] == "medium" for s in boot),
+    "bootstrap slots must start at medium, not easy",
 )
 
 # Override honored on the bootstrap (no --topics) path.
@@ -144,13 +144,14 @@ check(
     "a per-topic override must NOT force an unselected topic into the session",
 )
 
-# 4d. multiplication-table=hard keeps weak-fact targeting (D4 / task 4.3)
-warm_plan = S.build_session_plan(count=8, difficulty_map={"multiplication-table": "hard"})
-warm = [s for s in warm_plan if s["qtype"] == "multiplication-table"]
-check(bool(warm), "warmup slots must exist")
-check(all(s["difficulty"] == "hard" for s in warm), "warmup tier must honor multiplication-table override")
-check(any("target_fact" in s for s in warm), "warmup must still target weak facts under an override")
-check(warm[0].get("target_fact") == "7×8", "warmup must target the weakest fact (7×8) first")
+# 4d. multiplication-table is mastered: no longer forced into the session, and
+# when it does appear (via rotation) it gets no weak-fact targeting
+S._prioritized_topics = lambda summary, exclude=None: ["multiplication-table", "division", "addition"]
+mult_plan = S.build_session_plan(count=8, difficulty_map={"multiplication-table": "hard"})
+mult = [s for s in mult_plan if s["qtype"] == "multiplication-table"]
+check(bool(mult), "multiplication-table can still appear via normal rotation")
+check(all(s["difficulty"] == "hard" for s in mult), "per-topic override applies like any other topic")
+check(not any("target_fact" in s for s in mult), "multiplication-table must no longer be weak-fact-targeted")
 
 
 # ── 5. Token parsing + invalid input (task 4.4) ──────────────────────────────

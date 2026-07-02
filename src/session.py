@@ -30,6 +30,10 @@ TOPIC_ALIASES = {
 
 VALID_LEVELS = {"easy", "medium", "hard"}
 
+# Topics omitted from automatic rotation/priority selection. They remain
+# generatable on explicit request (`--topics …`), which bypasses this list.
+AUTO_EXCLUDED_TOPICS = {"prime-composite"}
+
 # Priority score of a never-practiced topic (correct_rate 0.5, 0 practices,
 # infinitely stale): 0.5*0.5 + 1.0*0.3 + 1.0*0.2 = 0.75. A confirmed weakness
 # (a practiced topic answered wrong) must rank at least this high — see
@@ -144,28 +148,26 @@ def _topic_priority(qtype: str, tdata: dict) -> float:
 
 
 def _zone_counts(count: int) -> tuple:
-    """Map a total question count to (warmup, primary, rotation) counts.
+    """Map a total question count to (primary, rotation) counts.
 
-    The three zones always sum exactly to `count` for any count ≥ 1 (`--count`
-    is unclamped). Warmup shrinks first for small counts (`min(3, count)`); the
-    primary-drill depth is 2 when the post-warmup remainder is ≥ 4, else 1 (or 0
-    when there is no remainder); the rest are 1-each rotation slots.
+    The zones always sum exactly to `count` for any count ≥ 1 (`--count` is
+    unclamped). Primary-drill depth is 2 when `count` is ≥ 4, else 1 (or 0 for
+    count 0); the rest are 1-each rotation slots.
     """
-    warmup = min(3, max(0, count))
-    remainder = count - warmup
-    if remainder <= 0:
+    count = max(0, count)
+    if count <= 0:
         primary = 0
-    elif remainder >= 4:
+    elif count >= 4:
         primary = 2
     else:
         primary = 1
-    rotation = remainder - primary
-    return warmup, primary, rotation
+    rotation = count - primary
+    return primary, rotation
 
 
 def _prioritized_topics(summary: dict, exclude: set = None) -> list:
     """Return all template topics sorted by priority (highest first)."""
-    exclude = exclude or set()
+    exclude = (exclude or set()) | AUTO_EXCLUDED_TOPICS
     topics_data = summary.get("topics", {})
     scored = []
     for qtype in TEMPLATE_TOPICS:
@@ -178,23 +180,6 @@ def _prioritized_topics(summary: dict, exclude: set = None) -> list:
     return [qtype for _, qtype in scored]
 
 
-def _weakest_mult_facts(summary: dict, n: int = 3) -> list:
-    """Return the n weakest multiplication fact keys (lowest correct/wrong ratio)."""
-    facts = summary.get("topics", {}).get("multiplication-table", {}).get("facts", {})
-    if not facts:
-        return []
-    # Score by wrong / (correct + wrong) ratio
-    scored = []
-    for fact_key, fdata in facts.items():
-        c = fdata.get("correct", 0)
-        w = fdata.get("wrong", 0)
-        total = c + w
-        ratio = w / total if total > 0 else 0.5
-        scored.append((ratio, fact_key))
-    scored.sort(reverse=True)
-    return [key for _, key in scored[:n]]
-
-
 def build_session_plan(
     count: int = 10,
     topics_override: list = None,
@@ -204,7 +189,6 @@ def build_session_plan(
     """Build a session plan: list of {qtype, difficulty} dicts.
 
     Without overrides, uses progress data to decide structure:
-      - 3 warmup (multiplication-table, targeting weak facts)
       - 2-deep primary drill on the top-priority topic
       - 1-each rotation across the next distinct topics in priority order
 
@@ -242,16 +226,6 @@ def build_session_plan(
     return _adaptive_plan(summary, count, difficulty_override, difficulty_map)
 
 
-def _warmup_difficulty(difficulty_map: dict, difficulty_global: str) -> str:
-    """Warmup tier: per-topic override > global > medium (never auto-inferred).
-
-    Weak-fact targeting is applied separately and is unaffected by this tier.
-    """
-    if difficulty_map and "multiplication-table" in difficulty_map:
-        return difficulty_map["multiplication-table"]
-    return difficulty_global or "medium"
-
-
 def _bootstrap_plan(
     count: int,
     difficulty: str = None,
@@ -260,19 +234,14 @@ def _bootstrap_plan(
 ) -> list:
     """Diagnostic session for first run (no progress data).
 
-    Advanced pitch: non-warmup questions start at `medium` (not `easy`).
+    Advanced pitch: questions start at `medium` (not `easy`).
     """
     summary = summary or {}
     plan = []
-    warmup_diff = _warmup_difficulty(difficulty_map, difficulty)
-    # 3 multiplication warmup
-    for _ in range(min(3, count)):
-        plan.append({"qtype": "multiplication-table", "difficulty": warmup_diff})
-    # Remaining: distribute across core topics, starting at medium for an
-    # advanced student (auto inference on an empty summary yields medium).
+    # Distribute across core topics, starting at medium for an advanced
+    # student (auto inference on an empty summary yields medium).
     core = ["addition", "subtraction", "division", "fraction-comparison", "fraction-addition"]
-    remaining = count - len(plan)
-    for i in range(remaining):
+    for i in range(count):
         qtype = core[i % len(core)]
         plan.append({
             "qtype": qtype,
@@ -289,27 +258,16 @@ def _adaptive_plan(
 ) -> list:
     """Session plan driven by progress data.
 
-    Zoned spread: warmup (multiplication, weak facts) + primary depth on the
-    #1-priority topic + 1-each rotation across the next distinct topics in
-    priority order. There is no separate "coverage" pick — least-touched topics
-    already rank at the top of `_topic_priority`, so long-tail breadth falls out
-    of the distinct-topic spread (a default 8-question session yields ≥5 distinct
-    topics).
+    Zoned spread: primary depth on the #1-priority topic + 1-each rotation
+    across the next distinct topics in priority order. There is no separate
+    "coverage" pick — least-touched topics already rank at the top of
+    `_topic_priority`, so long-tail breadth falls out of the distinct-topic
+    spread (a default 8-question session yields ≥5 distinct topics).
     """
     plan = []
-    warmup_count, primary_count, rotation_count = _zone_counts(count)
+    primary_count, rotation_count = _zone_counts(count)
 
-    # Warmup: multiplication, targeting weak facts (tier is not auto-inferred)
-    warmup_diff = _warmup_difficulty(difficulty_map, difficulty)
-    weak_facts = _weakest_mult_facts(summary, n=warmup_count)
-    for i in range(warmup_count):
-        entry = {"qtype": "multiplication-table", "difficulty": warmup_diff}
-        if i < len(weak_facts):
-            entry["target_fact"] = weak_facts[i]
-        plan.append(entry)
-
-    # Priority-sorted distinct topics (excluding the warmup topic)
-    sorted_topics = _prioritized_topics(summary, exclude={"multiplication-table"})
+    sorted_topics = _prioritized_topics(summary)
     if not sorted_topics:
         sorted_topics = ["fraction-addition", "division"]
 
@@ -336,13 +294,12 @@ def _adaptive_plan(
 def _infer_difficulty(summary: dict, qtype: str) -> str:
     """Pick difficulty based on correct rate.
 
-    Thresholds skew upward for an advanced student: harder tiers are reached
-    sooner than the prior 0.4/0.8 split.
+    Advanced pitch: auto-inference never drops below `medium` — a struggling
+    topic stays at medium rather than easing off. `easy` is reachable only by an
+    explicit `--difficulty easy` or a per-topic override (see resolve_difficulty).
     """
     tdata = summary.get("topics", {}).get(qtype, {})
     rate = tdata.get("correct_rate", 0.5)
-    if rate < 0.3:
-        return "easy"
     if rate > 0.65:
         return "hard"
     return "medium"

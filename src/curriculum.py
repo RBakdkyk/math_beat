@@ -47,7 +47,7 @@ def is_quiz_renderable(qtype: str) -> bool:
 
 # Block headers for WhatsApp output
 BLOCK_HEADERS = {
-    "multiplication-table":  "Warmup - Multiplication Table",
+    "multiplication-table":  "Multiplication Table",
     "addition":               "Addition",
     "subtraction":            "Subtraction",
     "multiplication":         "Multiplication",
@@ -165,12 +165,7 @@ def _prime_factors(n: int) -> list:
 # ─── Individual question generators ──────────────────────────────────────────
 
 def _mult_table(difficulty: str) -> dict:
-    pools = {
-        "easy":   [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 5 and b <= 5],
-        "medium": [(a, b) for a, b in MULTIPLICATION_FACTS if a <= 8],
-        "hard":   MULTIPLICATION_FACTS,
-    }
-    a, b = random.choice(pools.get(difficulty, pools["medium"]))
+    a, b = random.choice(MULTIPLICATION_FACTS)
     result = a * b
     choice = random.randint(0, 5)
     if choice == 0:
@@ -492,10 +487,10 @@ def _measurements_area(difficulty: str) -> dict:
     unit = random.choice(["ס\"מ", "מ'"])
     unit_sq = "סמ\"ר" if unit == "ס\"מ" else "מ\"ר"
     desc = random.choice([
-        f"מה שטח המלבן? (אורך {l} {unit}, רוחב {w} {unit})",
-        f"חשב/י שטח מלבן: אורך {l} {unit}, רוחב {w} {unit}",
-    ])
-    return _q(desc, f"{l} × {w} =", f"{l * w} {unit_sq}", "numeric", "measurements-area",
+        f"מה שטח המלבן שאורכו {l} {unit} ורוחבו {w} {unit}?",
+        f"חשב/י שטח מלבן: אורך {l} {unit}, רוחב {w} {unit}.",
+    ]) + " נוסחה: שטח = אורך × רוחב"
+    return _q(desc, "", f"{l * w} {unit_sq}", "numeric", "measurements-area",
               f"area:{l}×{w}")
 
 
@@ -508,10 +503,10 @@ def _measurements_perimeter(difficulty: str) -> dict:
         l, w = random.randint(5, 20), random.randint(2, 9)
     unit = random.choice(["ס\"מ", "מ'"])
     desc = random.choice([
-        f"מה היקף המלבן? (אורך {l} {unit}, רוחב {w} {unit})",
-        f"חשב/י היקף מלבן: אורך {l} {unit}, רוחב {w} {unit}",
-    ])
-    return _q(desc, f"2 × ({l} + {w}) =", f"{2 * (l + w)} {unit}", "numeric", "measurements-perimeter",
+        f"מה היקף המלבן שאורכו {l} {unit} ורוחבו {w} {unit}?",
+        f"חשב/י היקף מלבן: אורך {l} {unit}, רוחב {w} {unit}.",
+    ]) + " נוסחה: היקף = 2 × (אורך + רוחב)"
+    return _q(desc, "", f"{2 * (l + w)} {unit}", "numeric", "measurements-perimeter",
               f"perim:{l}×{w}")
 
 
@@ -537,17 +532,17 @@ def _volume_surface_area(difficulty: str) -> dict:
         volume = a * b * c
         desc = random.choice([
             f"מה נפח התיבה? ({dims})",
-            f"חשב/י נפח תיבה: {dims}",
-        ])
-        return _q(desc, f"{a} × {b} × {c} =", f"{volume} סמ\"ק", "numeric",
+            f"חשב/י נפח תיבה: {dims}.",
+        ]) + " נוסחה: נפח = אורך × רוחב × גובה"
+        return _q(desc, "", f"{volume} סמ\"ק", "numeric",
                   "volume-surface-area", f"volume:{a}×{b}×{c}")
 
     surface = 2 * (a * b + b * c + a * c)
     desc = random.choice([
         f"מה שטח הפנים של התיבה? ({dims})",
-        f"חשב/י שטח פנים של תיבה: {dims}",
-    ])
-    return _q(desc, f"2 × ({a}×{b} + {b}×{c} + {a}×{c}) =", f"{surface} סמ\"ר",
+        f"חשב/י שטח פנים של תיבה: {dims}.",
+    ]) + " נוסחה: שטח פנים = 2 × (אורך×רוחב + רוחב×גובה + אורך×גובה)"
+    return _q(desc, "", f"{surface} סמ\"ר",
               "numeric", "volume-surface-area", f"surface:{a}×{b}×{c}")
 
 
