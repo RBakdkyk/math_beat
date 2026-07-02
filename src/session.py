@@ -32,7 +32,7 @@ VALID_LEVELS = {"easy", "medium", "hard"}
 
 # Topics omitted from automatic rotation/priority selection. They remain
 # generatable on explicit request (`--topics …`), which bypasses this list.
-AUTO_EXCLUDED_TOPICS = {"prime-composite"}
+AUTO_EXCLUDED_TOPICS = {"prime-composite", "math-sense"}
 
 # Priority score of a never-practiced topic (correct_rate 0.5, 0 practices,
 # infinitely stale): 0.5*0.5 + 1.0*0.3 + 1.0*0.2 = 0.75. A confirmed weakness
@@ -218,12 +218,20 @@ def build_session_plan(
                     qtype, difficulty_map, difficulty_override, summary
                 ),
             })
-        return plan
+    elif not has_progress:
+        plan = _bootstrap_plan(count, difficulty_override, difficulty_map, summary)
+    else:
+        plan = _adaptive_plan(summary, count, difficulty_override, difficulty_map)
 
-    if not has_progress:
-        return _bootstrap_plan(count, difficulty_override, difficulty_map, summary)
-
-    return _adaptive_plan(summary, count, difficulty_override, difficulty_map)
+    # Constant math-sense slot, appended on top of the normal plan — never
+    # competes for a primary/rotation slot (excluded via AUTO_EXCLUDED_TOPICS).
+    plan.append({
+        "qtype": "math-sense",
+        "difficulty": resolve_difficulty(
+            "math-sense", difficulty_map, difficulty_override, summary
+        ),
+    })
+    return plan
 
 
 def _bootstrap_plan(

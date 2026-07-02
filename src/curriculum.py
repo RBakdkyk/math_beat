@@ -25,6 +25,7 @@ TOPICS = {
     "arithmetic-sequences":   {"name": "Arithmetic Sequences",   "hours":  6},
     "multiplication-by-tens": {"name": "Multiplication by Tens", "hours":  4},
     "equations-unknown":      {"name": "Equations with Unknown", "hours":  6},
+    "math-sense":             {"name": "Math Sense",             "hours":  0},
     # Claude-only topics:
     "word-problems":          {"name": "Word Problems",          "hours": 12},
     "geometry":               {"name": "Geometry",               "hours": 15},
@@ -719,6 +720,49 @@ def _natural_numbers(difficulty: str) -> dict:
               f"natnum:{n}-pos{pos}")
 
 
+def _math_sense(difficulty: str) -> dict:
+    # Number-sense/reasoning enrichment, not a named kita4 topic — grounded in
+    # the ד.4 number-sense strand (L323-332: relational fill-in) and the
+    # standalone parity-reasoning (L845) and estimation (L300-321) curriculum
+    # points. Same precedent as _arithmetic_sequences: one generator, several
+    # internal shapes, none of them requiring exact computation.
+    shape = random.randint(0, 2)
+
+    if shape == 0:
+        # Relational fill-in: a×b=c is given, ask for a×(b×10).
+        a = random.randint(2, 9)
+        b = random.randint(2, 9)
+        c = a * b
+        return _q("השלם/י לפי הקשר:", f"{a}×{b}={c}  →  {a}×{b*10}=___", c * 10,
+                   "numeric", "math-sense", f"mathsense-relate:{a}x{b}")
+
+    if shape == 1:
+        # Parity without computing.
+        op = random.choice(["+", "-", "×"])
+        a = random.randint(10, 999)
+        b = random.randint(10, 999)
+        if op == "+":
+            result_even = (a + b) % 2 == 0
+        elif op == "-":
+            result_even = (a - b) % 2 == 0
+        else:
+            result_even = (a * b) % 2 == 0
+        answer = "זוגי" if result_even else "אי-זוגי"
+        return _q("זוגי או אי-זוגי? (בלי לחשב את התוצאה)", f"{a} {op} {b}", answer,
+                   "categorical", "math-sense", f"mathsense-parity:{a}{op}{b}",
+                   widget="choice", options=["זוגי", "אי-זוגי"])
+
+    # Estimate-and-judge: is a×b greater than a round number N?
+    a = random.randint(11, 99)
+    b = random.randint(11, 99)
+    product = a * b
+    n = random.choice([500, 1000, 2000, 5000])
+    answer = "כן" if product > n else "לא"
+    return _q("בלי לחשב בדיוק — האם זה גדול מ:", f"{a}×{b} > {n}?", answer,
+               "categorical", "math-sense", f"mathsense-estimate:{a}x{b}vs{n}",
+               widget="choice", options=["כן", "לא"])
+
+
 # ─── Public API ──────────────────────────────────────────────────────────────
 
 _GENERATORS = {
@@ -741,6 +785,7 @@ _GENERATORS = {
     "arithmetic-sequences":   _arithmetic_sequences,
     "multiplication-by-tens": _multiplication_by_tens,
     "equations-unknown":      _equations_unknown,
+    "math-sense":             _math_sense,
 }
 
 
