@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="he">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>קו השברים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Secular+One&display=swap">
+<style>
+/* layout: one play card on mint graph paper; a yellow tape-measure number line is the motif that runs through every screen */
+:root{
+  --bg:#dcf2ea; --grid:#c8e7db; --card:#ffffff; --ink:#1d2742; --muted:#58668a; --line:#d6e7e0; --key:#eef7f3; --shadow:#9fd3bf;
+  --tape:#ffc83d; --tape-ink:#6b4a00; --a:#e85454; --b:#2f72d0; --sum:#7a4bc9; --ok:#15824f; --soft:#fff3c4; --warn:#b4530b;
+  --display:"Secular One","Rubik",system-ui,"Arial Hebrew",sans-serif; --body:"Rubik",system-ui,"Arial Hebrew",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px;
+  color:var(--ink);font-family:var(--body);font-size:16px;padding-block:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font-family:inherit;color:var(--ink);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+button:focus-visible,.nl:focus-visible{outline:3px solid var(--b);outline-offset:3px}
+main{max-width:620px;margin:0 auto;background:var(--card);border-radius:28px;padding:18px;display:grid;gap:14px;box-shadow:0 8px 0 var(--shadow)}
+.stack{display:grid;gap:14px}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:400;text-wrap:balance}
+h1{flex:1;text-align:center;font-size:1.85rem} h2{text-align:center;font-size:1.5rem} h3{font-size:1.25rem}
+p{margin:0}
+.sub{text-align:center;color:var(--muted);text-wrap:balance}
+header{display:flex;align-items:center;gap:8px}
+.icon{font-size:1.4rem;width:48px;height:48px;border-radius:14px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.icon:active,.btn:active,.pad button:active,.lvl:active,.mode:active,.cfr:active,.eqb:active,.opt:active,.cardf:active,.seg button:active,.step button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.btn{font:700 1.15rem var(--body);min-height:48px;padding:12px 20px;border-radius:16px;border:0;background:var(--key);box-shadow:0 5px 0 var(--line)}
+.btn.main{background:var(--b);color:#fff;box-shadow:0 5px 0 #1f4f94}
+.btn:disabled{opacity:.45;cursor:default}
+.tool{font:600 1rem var(--body);min-height:44px;background:none;border:2px solid var(--line);border-radius:14px;padding:8px 12px}
+.tools{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+
+/* fractions */
+.mx{direction:ltr;unicode-bidi:isolate;display:inline-flex;align-items:center;gap:.16em;vertical-align:middle;font-variant-numeric:tabular-nums}
+.mx b{font-weight:inherit}
+.fr{display:inline-flex;flex-direction:column;align-items:center;line-height:1.08}
+.fr i{font-style:normal;padding:0 .14em}
+.fr i:first-child{border-bottom:.09em solid currentColor}
+
+/* number line: always drawn left to right, like the textbook */
+.nl{direction:ltr;position:relative;height:122px;touch-action:none;user-select:none;-webkit-user-select:none}
+.nl.two{height:170px}
+.nl .track{position:absolute;inset:0 24px}
+.nl .bar{position:absolute;left:-10px;right:-10px;top:64px;height:14px;border-radius:7px;background:var(--tape);box-shadow:inset 0 -3px 0 rgba(107,74,0,.2)}
+.nl .tk{position:absolute;top:58px;width:3px;height:26px;margin-left:-1.5px;border-radius:2px;background:var(--tape-ink)}
+.nl .tk.mi{top:62px;height:18px;width:2px;margin-left:-1px;opacity:.75}
+.nl .lb{position:absolute;top:88px;transform:translateX(-50%);font:700 1.05rem var(--body);white-space:nowrap}
+.nl .lb.mi{font-size:.78rem;font-weight:500;color:var(--muted)}
+.nl.two .lb{top:142px}
+.nl .mk{position:absolute;bottom:calc(100% - 62px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.nl .mk.dn{bottom:auto;top:80px;flex-direction:column-reverse}
+.nl.two .mk{bottom:auto;top:auto;bottom:108px}
+.nl.two .mk.dn{bottom:auto;top:80px}
+.nl .tag{padding:3px 7px;border-radius:10px;background:var(--c,var(--ink));color:#fff;font:700 1rem var(--body);white-space:nowrap}
+.nl .tag .fr{font-size:.9em}
+.nl .stem{width:3px;height:12px;background:var(--c,var(--ink))}
+.nl .pin .tag{font-size:1.1rem;padding:4px 10px}
+.nl.pick{cursor:pointer}
+.nl.race .mk .tag{background:var(--card);color:var(--ink);border:3px solid var(--c);font-size:1.3rem;padding:0 4px}
+
+/* home */
+.hero{background:var(--key);border-radius:22px;padding:8px 6px 0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{display:grid;gap:3px;justify-items:center;align-content:start;padding:16px 8px;border-radius:22px;border:0;color:#fff;box-shadow:0 6px 0 rgba(29,39,66,.22)}
+.mode .em{font-size:2.2rem;line-height:1.2} .mode b{font:400 1.3rem var(--display)} .mode small{font-size:.92rem;font-weight:500;text-align:center}
+.m-map{background:var(--a)} .m-race{background:var(--tape);color:var(--ink)} .m-lab{background:var(--b)} .m-learn{background:var(--sum)}
+.parents{background:var(--soft);border-radius:16px;padding:10px 14px;font-size:.95rem;line-height:1.5}
+
+/* level map */
+.levels{display:grid;gap:8px}
+.lvl{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;text-align:start;padding:10px 12px;border-radius:18px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.lvl .num{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:400 1.3rem var(--display);color:#fff;background:var(--c)}
+.lvl .nm{font-weight:600;line-height:1.3}
+.lvl .st{font-size:.95rem;white-space:nowrap}
+.lvl.next{outline:3px solid var(--tape);outline-offset:2px}
+.group{margin:6px 0 0;font:400 1.05rem var(--display);color:var(--muted)}
+
+/* round */
+.where{text-align:center;color:var(--muted);font-weight:600}
+.path{display:flex;align-items:center;justify-content:center;gap:6px}
+.stone{width:30px;height:30px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:.95rem;font-style:normal}
+.stone.star{background:var(--soft)} .stone.ok{background:#d3f0e0} .stone.miss{background:#f6e3d6}
+.stone.here{background:var(--card);outline:3px solid var(--b)}
+.tip{background:var(--key);border-radius:14px;padding:8px 12px;font-size:.95rem;line-height:1.5}
+.task{text-align:center;font:500 1.25rem/1.65 var(--body);text-wrap:balance}
+.task .fr{font-size:.92em}
+.task .big{display:block;direction:ltr;unicode-bidi:isolate;margin-top:2px;font:400 2.7rem var(--display);color:var(--b)}
+.viz{display:grid;gap:10px}
+.viz:empty{display:none}
+.cap{text-align:center;color:var(--muted);line-height:1.55;text-wrap:balance}
+.say{display:flex;align-items:center;gap:10px;min-height:58px;background:var(--key);border-radius:18px;padding:6px 12px}
+.say .face{font-size:2.2rem;line-height:1}
+.say p{flex:1;min-width:0;font:500 1.1rem/1.5 var(--body)}
+.fin-cap{text-align:center;color:var(--muted);font-size:.9rem}
+.fin{direction:ltr;display:flex;align-items:center;justify-content:center;gap:12px}
+.fstack{display:grid;justify-items:center;gap:6px}
+.fstack hr{width:84px;margin:0;border:0;border-top:4px solid var(--ink);border-radius:2px}
+.box{min-width:70px;height:58px;padding:0 8px;border:3px dashed var(--b);border-radius:14px;background:var(--card);font:400 2rem var(--display)}
+.box.w{height:70px;min-width:62px}
+.box.focus{border-style:solid;background:var(--soft)}
+.box.right{border:3px solid var(--ok);color:var(--ok)}
+.pad{direction:ltr;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad button{font:400 1.8rem var(--display);min-height:54px;border-radius:16px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.pad .go{background:var(--ok);color:#fff}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.cfr{font:400 2.6rem var(--display);padding:18px 6px;border-radius:20px;border:0;background:var(--key);box-shadow:0 5px 0 var(--line)}
+.eqb{font:700 1.1rem var(--body);padding:14px 10px;border-radius:16px;border:0;background:var(--soft);box-shadow:0 4px 0 var(--line)}
+.cfr.right,.eqb.right{outline:4px solid var(--ok)} .cfr.wrong,.eqb.wrong{opacity:.5}
+
+/* pictures */
+.pizzas{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.pz{width:54px;height:54px;border-radius:50%;border:3px solid #c98b2b;display:block}
+.kids{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.kid{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--c);font-size:1.1rem}
+.groups{direction:ltr;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.grp{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:6px;border:2px dashed var(--line);border-radius:10px;max-width:84px}
+.grp.on{border-color:var(--a);background:#fdeaea}
+.dot{width:13px;height:13px;border-radius:50%;background:#b9c9c2}
+.grp.on .dot{background:var(--a)}
+.strips{display:grid;gap:8px}
+.srow{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:8px;direction:ltr}
+.slab{text-align:center;font:400 1.3rem var(--display)}
+.bars{display:grid;gap:4px}
+.strip{display:flex;height:28px;border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--card)}
+.strip span{flex:1;border-inline-end:1px solid rgba(29,39,66,.4)}
+.strip span:last-child{border:0}
+.strip span.on{background:var(--c)}
+
+/* race */
+.seg{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.seg button{min-height:48px;padding:10px 14px;border-radius:14px;border:3px solid transparent;background:var(--key);box-shadow:0 4px 0 var(--line);font-weight:600}
+.seg button[aria-pressed="true"]{border-color:var(--tape);background:var(--soft)}
+.label{text-align:center;font-weight:700}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:16px;background:var(--key);border:3px solid transparent}
+.chip.on{border-color:var(--c)}
+.chip .f{font-size:1.8rem} .chip b{flex:1} .chip .pos{font:400 1.4rem var(--display)}
+.turn{text-align:center;font:400 1.3rem var(--display)}
+.hand{display:flex;justify-content:center;gap:12px}
+.cardf{width:78px;height:104px;border-radius:14px;border:3px solid var(--tape);background:var(--card);font:400 2rem var(--display);box-shadow:0 5px 0 var(--line)}
+.cardf[aria-pressed="true"]{background:var(--soft);transform:translateY(-6px)}
+.cardf:disabled{cursor:default}
+.ask{text-align:center;font-weight:700}
+.opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.opt{min-width:86px;min-height:64px;padding:8px 12px;border-radius:16px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line);font:400 1.7rem var(--display)}
+.win{display:grid;gap:12px;justify-items:center;text-align:center;background:var(--soft);border-radius:20px;padding:16px}
+.win .big{font-size:3.6rem;line-height:1}
+
+/* lab + learn */
+.steppers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stepbox{display:grid;gap:6px;justify-items:center;padding:10px;border-radius:18px;border:3px solid var(--c);background:var(--card)}
+.stepbox .val{font:400 2.4rem var(--display);color:var(--c)}
+.step{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--muted)}
+.step button{width:44px;height:44px;border-radius:12px;border:0;background:var(--key);box-shadow:0 3px 0 var(--line);font:700 1.3rem var(--body)}
+.results{display:grid;gap:6px;text-align:center;font:400 1.5rem var(--display)}
+.results .no{font:500 1rem var(--body);color:var(--muted)}
+.results .eq{direction:ltr;unicode-bidi:isolate}
+.lesson{display:grid;gap:10px;padding:14px;border:2px solid var(--line);border-radius:20px}
+.lesson ul{margin:0;padding-inline-start:20px;display:grid;gap:6px;line-height:1.6}
+.lesson p{line-height:1.6}
+.warn{background:#fdeee3;color:var(--warn);border-radius:12px;padding:8px 12px;line-height:1.55}
+
+/* end */
+.end{display:grid;gap:12px;justify-items:center;text-align:center}
+.end .big{font-size:5rem;line-height:1.1}
+.why{width:100%;display:grid;gap:4px;text-align:start;background:var(--soft);border-radius:18px;padding:12px 14px;line-height:1.55}
+.why b{font:400 1.1rem var(--display)}
+
+#fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+#fx span{position:absolute;top:-50px;animation:fall 1.5s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(300deg)}}
+@media (hover:hover){.lvl:hover,.mode:hover,.cfr:hover,.opt:hover,.cardf:hover{filter:brightness(1.03)}}
+@media (max-width:420px){.cardf{width:68px;height:94px}.cfr{font-size:2.2rem}.modes{gap:10px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div id="fx" aria-hidden="true"></div>
+<main dir="rtl">
+  <header>
+    <button class="icon" id="homeBtn" data-go="home" aria-label="למסך הבית" hidden>🏠</button>
+    <h1>קו השברים</h1>
+    <button class="icon" id="mute" aria-label="צלילים">🔊</button>
+  </header>
+
+  <section id="home" class="stack">
+    <div class="hero" id="hero" aria-hidden="true"></div>
+    <p class="sub">שברים של כיתה ה׳: קו המספרים, שבר כחילוק, חלק מכמות, השוואה, וחיבור וחיסור עם מכנים שונים</p>
+    <div class="modes">
+      <button class="mode m-map" data-go="map"><span class="em">🗺️</span><b>מסע השלבים</b><small id="starsTxt"></small></button>
+      <button class="mode m-race" data-go="raceSetup"><span class="em">🏁</span><b>בדיוק על היעד</b><small>משחק נגד הורה או רובוט</small></button>
+      <button class="mode m-lab" data-go="lab"><span class="em">🔬</span><b>מעבדת השברים</b><small>משחקים עם שני שברים</small></button>
+      <button class="mode m-learn" data-go="learn"><span class="em">📖</span><b>איך זה עובד?</b><small>4 רעיונות חשובים</small></button>
+    </div>
+    <p class="parents"><b>להורים:</b> בסוף כל סיבוב מופיעה שאלה לשיחה. כדאי לעצור ולשאול אותה. ההסבר במילים שלה הוא מה שהופך משחק להבנה.</p>
+  </section>
+
+  <section id="map" class="stack" hidden>
+    <h2>מסע השלבים</h2>
+    <p class="sub">כל השלבים פתוחים. השלב המסומן בצהוב הוא הבא בתור.</p>
+    <div class="levels" id="levels"></div>
+  </section>
+
+  <section id="round" class="stack" hidden>
+    <p class="where" id="where"></p>
+    <div class="path" id="path"></div>
+    <p class="tip" id="tip"></p>
+    <div class="task" id="task"></div>
+    <div class="viz" id="viz"></div>
+    <div class="cmp" id="cmpArea" hidden></div>
+    <div class="row" id="lineArea" hidden><button class="btn main" id="checkLine" disabled>בדיקה ✓</button></div>
+    <div class="stack" id="finArea" hidden>
+      <p class="fin-cap" id="finCap"></p>
+      <div class="fin" id="fin"></div>
+      <div class="pad" id="pad">
+        <button>1</button><button>2</button><button>3</button>
+        <button>4</button><button>5</button><button>6</button>
+        <button>7</button><button>8</button><button>9</button>
+        <button data-k="del" aria-label="מחיקה">⌫</button><button>0</button><button data-k="go" class="go" aria-label="בדיקה">✓</button>
+      </div>
+    </div>
+    <div class="say"><span class="face" aria-hidden="true">🦉</span><p id="msg" role="status" aria-live="polite"></p></div>
+    <div class="row"><button class="btn main" id="nextBtn" hidden>ממשיכים ⬅️</button></div>
+    <div class="tools">
+      <button class="tool" id="nextBox">⇥ לתיבה הבאה</button>
+      <button class="tool" id="help">✏️ ציור עזר</button>
+      <button class="tool" id="skip">🔄 שאלה אחרת</button>
+    </div>
+  </section>
+
+  <section id="end" class="end" hidden>
+    <div class="big" id="endFace">🎉</div>
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <div class="why"><b>💬 שאלה לשיחה עם ההורה</b><p id="endWhy"></p></div>
+    <div class="row">
+      <button class="btn main" id="endNext"></button>
+      <button class="btn" id="endAgain">עוד סיבוב 🔁</button>
+      <button class="btn" data-go="map">🗺️ לשלבים</button>
+    </div>
+  </section>
+
+  <section id="raceSetup" class="stack" hidden>
+    <h2>🏁 בדיוק על היעד</h2>
+    <p class="sub">בכל תור מקבלים 3 קלפי שברים, בוחרים אחד ומחשבים לאן מגיעים. מי שנוחת <b>בדיוק</b> על היעד מנצח. מי שעובר את היעד נשאר במקום.</p>
+    <p class="label">נגד מי?</p>
+    <div class="seg" id="segOpp"><button data-v="parent">🧑 הורה</button><button data-v="robot">🤖 רובוט</button></div>
+    <p class="label">אילו קלפים?</p>
+    <div class="seg" id="segDeck"></div>
+    <p class="label">מה היעד?</p>
+    <div class="seg" id="segTarget"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+    <div class="row"><button class="btn main" id="raceGo">מתחילים! 🏁</button></div>
+    <p class="sub" id="raceRecord"></p>
+  </section>
+
+  <section id="race" class="stack" hidden>
+    <div class="board" id="chips"></div>
+    <div id="raceLine"></div>
+    <p class="turn" id="turn"></p>
+    <div class="hand" id="hand"></div>
+    <p class="ask" id="ask" hidden></p>
+    <div class="opts" id="opts"></div>
+    <div class="say"><span class="face" aria-hidden="true">🦉</span><p id="rmsg" role="status" aria-live="polite"></p></div>
+    <div class="row"><button class="tool" id="pass">🙅 אין קלף מתאים, מדלגים</button></div>
+    <div class="win" id="raceEnd" hidden>
+      <div class="big" id="winFace"></div>
+      <h2 id="winTitle"></h2>
+      <div class="why"><b>💬 שאלה לשיחה</b><p id="winWhy"></p></div>
+      <div class="row"><button class="btn main" id="raceAgain">עוד סיבוב 🔁</button><button class="btn" data-go="raceSetup">⚙️ הגדרות</button></div>
+    </div>
+  </section>
+
+  <section id="lab" class="stack" hidden>
+    <h2>🔬 מעבדת השברים</h2>
+    <p class="sub">שני את המונה והמכנה, ותראי איפה השברים על הקו, איך חותכים אותם לחתיכות שוות, ומה הסכום וההפרש.</p>
+    <div class="steppers">
+      <div class="stepbox" style="--c:var(--a)"><span class="val" id="labA"></span>
+        <span class="step"><button data-lab="a,n,-1" aria-label="הקטנת המונה">−</button>מונה<button data-lab="a,n,1" aria-label="הגדלת המונה">+</button></span>
+        <span class="step"><button data-lab="a,d,-1" aria-label="הקטנת המכנה">−</button>מכנה<button data-lab="a,d,1" aria-label="הגדלת המכנה">+</button></span></div>
+      <div class="stepbox" style="--c:var(--b)"><span class="val" id="labB"></span>
+        <span class="step"><button data-lab="b,n,-1" aria-label="הקטנת המונה">−</button>מונה<button data-lab="b,n,1" aria-label="הגדלת המונה">+</button></span>
+        <span class="step"><button data-lab="b,d,-1" aria-label="הקטנת המכנה">−</button>מכנה<button data-lab="b,d,1" aria-label="הגדלת המכנה">+</button></span></div>
+    </div>
+    <div id="labLine"></div>
+    <div class="strips" id="labStrips"></div>
+    <div class="results" id="labRes"></div>
+  </section>
+
+  <section id="learn" class="stack" hidden>
+    <h2>📖 איך זה עובד?</h2>
+    <div class="stack" id="lessons"></div>
+  </section>
+</main>
+
+<script>
+// ---- math (pure, no DOM) ----
+const rnd = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = a => a[rnd(0, a.length - 1)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+const lcm = (a, b) => a / gcd(a, b) * b;
+// a fraction is {n, d} with whole-number parts. T() keeps the form a question shows (2/4 stays 2/4); Q() reduces.
+const T = (n, d = 1) => ({n, d});
+const Q = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return {n: n / g, d: d / g}; };
+const plus = (x, y) => Q(x.n * y.d + y.n * x.d, x.d * y.d);
+const minus = (x, y) => Q(x.n * y.d - y.n * x.d, x.d * y.d);
+const cmp = (x, y) => Math.sign(x.n * y.d - y.n * x.d);
+const same = (x, y) => cmp(x, y) === 0;
+const reduced = (n, d) => gcd(n, d) === 1;
+const num = x => x.n / x.d; // for drawing positions only, never for checking answers
+
+// fraction text and markup (strings only)
+const ltr = s => `⁦${s}⁩`; // keeps "3/4 + 1/8" left-to-right inside Hebrew sentences
+const st = (n, d) => `<span class="fr"><i>${n}</i><i>${d}</i></span>`;
+function frH(x, mixed = true) {
+  if (x.d === 1) return `<span class="mx">${x.n}</span>`;
+  const w = Math.floor(x.n / x.d), r = x.n % x.d;
+  if (!mixed || w === 0) return `<span class="mx">${st(x.n, x.d)}</span>`;
+  return r ? `<span class="mx"><b>${w}</b>${st(r, x.d)}</span>` : `<span class="mx">${w}</span>`;
+}
+function txt(x, mixed = true) {
+  const w = Math.floor(x.n / x.d), r = x.n % x.d;
+  if (r === 0) return ltr(String(w));
+  if (!mixed || w === 0) return ltr(`${x.n}/${x.d}`);
+  return `${ltr(String(w))} ו-${ltr(`${r}/${x.d}`)}`;
+}
+
+// ---- question pools: each level deals from a shuffled pool, no repeats until it runs out ----
+function interleave(...lists) { const out = []; for (let i = 0; lists.some(l => i < l.length); i++) for (const l of lists) if (i < l.length) out.push(l[i]); return out.reverse(); }
+
+const linePool1 = () => shuffle([T(1, 2), T(1, 3), T(2, 3), T(1, 4), T(2, 4), T(3, 4)].map(x => ({kind: 'line', x, max: 1, cut: x.d})));
+function linePool2() { const o = []; for (const d of [5, 6, 8, 10]) for (let n = 1; n < d; n++) o.push({kind: 'line', x: T(n, d), max: 1, cut: d}); return shuffle(o); }
+function linePool3() {
+  const o = [];
+  for (const d of [2, 3, 4, 5]) for (const max of [2, 3]) for (let n = d + 1; n < max * d; n++) if (n % d) o.push({kind: 'line', x: T(n, d), max, cut: d, mixed: Math.random() < .5});
+  return shuffle(o);
+}
+function sharePool(big) {
+  const o = [];
+  for (let a = 1; a <= 13; a++) for (let b = 2; b <= 8; b++)
+    if (big ? a > b && a % b && b <= 5 && a >= 4 : a < b && a <= 5) o.push({kind: 'share', a, b, ans: Q(a, b), mode: big ? 'mixed' : 'frac'});
+  return shuffle(o);
+}
+const CTX = [
+  {part: (all, f) => `בכיתה יש ${all} תלמידים. ${f} מהם הגיעו ברגל. כמה תלמידים הגיעו ברגל?`,
+   whole: (p, f) => `${f} מהתלמידים בכיתה הגיעו ברגל. אלה ${p} תלמידים. כמה תלמידים יש בכיתה?`,
+   frac: (p, all) => `בכיתה יש ${all} תלמידים, ו-${p} מהם הגיעו ברגל. איזה חלק מהכיתה הגיע ברגל?`},
+  {part: (all, f) => `במסיבה יש ${all} בלונים. ${f} מהם אדומים. כמה בלונים אדומים יש?`,
+   whole: (p, f) => `${f} מהבלונים במסיבה אדומים. יש ${p} בלונים אדומים. כמה בלונים יש בסך הכול?`,
+   frac: (p, all) => `במסיבה יש ${all} בלונים, ו-${p} מהם אדומים. איזה חלק מהבלונים אדום?`},
+  {part: (all, f) => `לנועה יש ${all} שקלים. היא הוציאה ${f} מהכסף על ספר. כמה שקלים עלה הספר?`,
+   whole: (p, f) => `נועה הוציאה ${f} מהכסף שלה על ספר שעלה ${p} שקלים. כמה שקלים היו לה?`,
+   frac: (p, all) => `לנועה היו ${all} שקלים, והיא הוציאה ${p} שקלים על ספר. איזה חלק מהכסף היא הוציאה?`},
+];
+function partPool() {
+  const o = [];
+  for (const c of CTX) for (let d = 2; d <= 6; d++) for (let n = 1; n < d; n++) if (reduced(n, d)) for (let k = 2; k <= 6; k++) {
+    const f = st(n, d);
+    o.push({kind: 'part', type: 'part', n, d, k, html: c.part(d * k, f), ans: Q(n * k), mode: 'int'});
+    o.push({kind: 'part', type: 'whole', n, d, k, html: c.whole(n * k, f), ans: Q(d * k), mode: 'int'});
+    o.push({kind: 'part', type: 'frac', n, d, k, html: c.frac(n * k, d * k), ans: Q(n, d), mode: 'frac'});
+  }
+  return shuffle(o);
+}
+function cmpPool() {
+  const cats = {sameNum: [], nearOne: [], equal: [], half: [], common: []};
+  const add = (x, y, cat) => { if (Math.random() < .5) [x, y] = [y, x]; cats[cat].push({kind: 'cmp', x, y, cat, ans: cmp(x, y)}); };
+  for (let n = 1; n <= 3; n++) for (let d1 = 3; d1 <= 10; d1++) for (let d2 = d1 + 1; d2 <= 10; d2++) if (n < d1 && reduced(n, d1) && reduced(n, d2)) add(T(n, d1), T(n, d2), 'sameNum');
+  for (let d1 = 3; d1 <= 10; d1++) for (let d2 = d1 + 1; d2 <= 10; d2++) add(T(d1 - 1, d1), T(d2 - 1, d2), 'nearOne');
+  for (const [n, d] of [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5]]) for (const k of [2, 3]) add(T(n, d), T(n * k, d * k), 'equal');
+  const half = T(1, 2);
+  for (const [d1, d2] of [[3, 4], [2, 5], [4, 6], [3, 5], [5, 6], [4, 5], [6, 8], [3, 8]]) for (let n1 = 1; n1 < d1; n1++) for (let n2 = 1; n2 < d2; n2++) {
+    const x = T(n1, d1), y = T(n2, d2);
+    if (reduced(n1, d1) && reduced(n2, d2) && !same(x, y)) add(x, y, cmp(x, half) * cmp(y, half) < 0 ? 'half' : 'common');
+  }
+  return interleave(...Object.values(cats).map(shuffle));
+}
+const PAIRS = {
+  multiple: [[2, 4], [2, 6], [2, 8], [3, 6], [3, 9], [4, 8], [4, 12], [5, 10], [3, 12], [2, 10], [6, 12]],
+  common: [[4, 6], [6, 8], [6, 9], [4, 10], [8, 12]],
+  coprime: [[2, 3], [2, 5], [2, 7], [3, 4], [3, 5], [4, 5], [3, 7], [2, 9]],
+};
+// adding tops and bottoms gives a number between the two fractions; we name that mistake when we see it
+function opTrap(x, y, op, ans) {
+  let t = null;
+  if (op === '+') t = Q(x.n + y.n, x.d + y.d);
+  else if (x.n > y.n && x.d > y.d) t = Q(x.n - y.n, x.d - y.d);
+  return t && !same(t, ans) ? t : null;
+}
+function opPool(pairs, mixed) {
+  const o = [], wholes = mixed ? [[1, 0], [2, 1], [3, 1], [2, 0], [1, 1], [3, 2]] : [[0, 0]];
+  for (const [d1, d2] of pairs) for (let n1 = 1; n1 < d1; n1++) for (let n2 = 1; n2 < d2; n2++) {
+    if (!reduced(n1, d1) || !reduced(n2, d2)) continue;
+    for (const [w1, w2] of wholes) for (const op of ['+', '−']) {
+      let x = T(w1 * d1 + n1, d1), y = T(w2 * d2 + n2, d2);
+      if (Math.random() < .5) [x, y] = [y, x];
+      if (op === '−' && cmp(x, y) < 0) [x, y] = [y, x];
+      if (op === '−' && same(x, y)) continue;
+      const ans = op === '+' ? plus(x, y) : minus(x, y);
+      o.push({kind: 'op', x, y, op, mixed, ans, mode: 'mixed', trap: mixed ? null : opTrap(x, y, op, ans)});
+    }
+  }
+  return shuffle(o);
+}
+
+const LEVELS = [
+  {group: 'קו המספרים', name: 'חצאים, שלישים ורבעים', pool: linePool1,
+   tip: 'חשבי קודם: השבר קטן מחצי או גדול מחצי?',
+   why: 'איך ידעת איפה לשים את ⁦2/3⁩? ולמה ⁦2/4⁩ נמצא בדיוק במקום של ⁦1/2⁩?'},
+  {group: 'קו המספרים', name: 'חמישיות עד עשיריות', pool: linePool2,
+   tip: 'השבר קרוב יותר ל-0, לחצי או ל-1?',
+   why: 'מה גדול יותר, ⁦1/8⁩ או ⁦1/5⁩? איך רואים את זה על הקו?'},
+  {group: 'קו המספרים', name: 'שברים גדולים מ-1', pool: linePool3,
+   tip: 'קודם מוצאים בין אילו שלמים השבר נמצא. ⁦7/4⁩ זה 1 ועוד ⁦3/4⁩.',
+   why: 'איך יודעים ש-⁦7/4⁩ גדול מ-1? ואיפה הוא ביחס ל-2?'},
+  {group: 'שבר הוא חילוק', name: 'פחות מפיצה לכל ילד', pool: () => sharePool(false),
+   tip: '3 פיצות ל-4 ילדים: כל ילד מקבל חתיכה אחת מכל פיצה.',
+   why: 'אם מגיעים עוד ילדים, כל אחד יקבל יותר או פחות? ולמה 3 פיצות ל-4 ילדים זה בדיוק ⁦3/4⁩?'},
+  {group: 'שבר הוא חילוק', name: 'יותר מפיצה לכל ילד', pool: () => sharePool(true),
+   tip: 'קודם כל ילד מקבל פיצות שלמות, ואת מה שנשאר חותכים. ⁦7 : 3 = 2⁩ ושארית 1.',
+   why: 'מה הקשר בין חילוק עם שארית לבין מספר מעורב?'},
+  {group: 'שבר הוא חילוק', name: 'חלק מכמות', pool: partPool,
+   tip: 'כדי למצוא ⁦3/4⁩ מ-20: מחלקים ל-4 קבוצות שוות ולוקחים 3 מהן.',
+   why: 'אם ⁦1/3⁩ מהכיתה הם 6 ילדים, איך מוצאים את כל הכיתה? ומה אם ⁦2/3⁩ מהכיתה הם 6 ילדים?'},
+  {group: 'השוואה', name: 'מי גדול יותר?', pool: cmpPool,
+   tip: 'דרכים להשוות: מכנה משותף, השוואה לחצי, או כמה חסר עד 1.',
+   why: 'למה ⁦1/5⁩ קטן מ-⁦1/3⁩, אף ש-5 גדול מ-3?'},
+  {group: 'חיבור וחיסור', name: 'מכנה אחד כפולה של השני', pool: () => opPool(PAIRS.multiple, false),
+   tip: 'בתרגיל ⁦1/2 + 1/4⁩: חצי זה ⁦2/4⁩. עכשיו לשני השברים יש אותו מכנה.',
+   why: 'למה צריך שהחתיכות יהיו באותו גודל לפני שמחברים?'},
+  {group: 'חיבור וחיסור', name: 'למכנים יש גורם משותף', pool: () => opPool(PAIRS.common, false),
+   tip: 'ב-⁦1/4 + 1/6⁩ המכנה המשותף הקטן ביותר הוא 12, לא 24.',
+   why: 'איך מוצאים את המכנה המשותף הקטן ביותר? האם גם 24 היה עובד?'},
+  {group: 'חיבור וחיסור', name: 'מכנים זרים', pool: () => opPool(PAIRS.coprime, false),
+   tip: 'כשלמכנים אין גורם משותף, כופלים אותם. ל-⁦1/3⁩ ול-⁦1/4⁩ המכנה המשותף הוא 12.',
+   why: 'האם ⁦1/2 + 1/3⁩ יכול להיות ⁦2/5⁩? (רמז: ⁦2/5⁩ קטן מ-⁦1/2⁩!)'},
+  {group: 'חיבור וחיסור', name: 'מספרים מעורבים עם מכנים שונים', pool: () => opPool([...PAIRS.multiple.slice(0, 6), ...PAIRS.common.slice(0, 3)], true),
+   tip: 'מחברים שלמים לשלמים ושברים לשברים. אם יוצא שבר גדול מ-1, הופכים אותו לשלם.',
+   why: 'מה עושים כשבחיסור אין מספיק חלקים בשבר הראשון?'},
+];
+const GROUP_COLOR = {'קו המספרים': 'var(--tape-ink)', 'שבר הוא חילוק': 'var(--a)', 'השוואה': 'var(--b)', 'חיבור וחיסור': 'var(--sum)'};
+
+const decks = [];
+function draw(i) { if (!decks[i]?.length) decks[i] = LEVELS[i].pool(); return decks[i].pop(); }
+
+// reading the answer boxes: whole / numerator / denominator, any of them may be empty
+function readAnswer(f) {
+  const has = k => f[k] !== '';
+  if (f.mode === 'int') return has('w') ? {val: Q(+f.w)} : null;
+  const w = has('w') ? +f.w : 0;
+  if (!has('n') && !has('d')) return f.mode === 'mixed' && has('w') ? {val: Q(w)} : null;
+  if (!has('d') || +f.d === 0) return {need: 'd'};
+  if (!has('n')) return {need: 'n'};
+  return {val: Q(w * +f.d + +f.n, +f.d), typed: {n: +f.n, d: +f.d}};
+}
+// a right answer written the long way gets a friendly note with the short way
+function formNote(typed, ans) {
+  if (!typed) return '';
+  if (typed.n >= typed.d) return `אפשר לכתוב גם ${txt(ans)}`;
+  if (!reduced(typed.n, typed.d)) return `אפשר גם לצמצם: ${txt(ans)}`;
+  return '';
+}
+
+// ---- race: land exactly on the target ----
+const DECKS = [
+  {name: 'חצאים, רבעים ושמיניות', cut: 8, cards: [T(1, 2), T(1, 4), T(3, 4), T(1, 8), T(3, 8), T(5, 8)]},
+  {name: 'שלישים, רבעים ושישיות', cut: 12, cards: [T(1, 2), T(1, 3), T(2, 3), T(1, 4), T(3, 4), T(1, 6), T(5, 6), T(1, 12)]},
+  {name: 'חצאים, חמישיות ועשיריות', cut: 10, cards: [T(1, 2), T(1, 5), T(2, 5), T(3, 5), T(1, 10), T(3, 10), T(7, 10)]},
+]; // every deck has a 1/cut card, so any gap on the line can still be closed
+const deal = deck => [pick(deck.cards), pick(deck.cards), pick(deck.cards)];
+function robotPick(pos, target, hand) {
+  const fits = hand.map((c, i) => ({i, p: plus(pos, c)})).filter(o => cmp(o.p, target) <= 0);
+  if (!fits.length) return -1;
+  const win = fits.find(o => same(o.p, target));
+  if (win) return win.i;
+  return fits.sort((a, b) => cmp(b.p, a.p))[0].i; // greedy: as far as it can go without passing the target
+}
+// three landing spots: the right one, the "add tops and bottoms" mistake, and a neighbour on the line
+function raceOptions(pos, card, cut) {
+  const ok = plus(pos, card), step = Q(1, cut), w = Math.floor(pos.n / pos.d), r = minus(pos, Q(w));
+  const cands = [];
+  if (r.n > 0) cands.push(plus(Q(w), Q(r.n + card.n, r.d + card.d)));
+  cands.push(...shuffle([plus(ok, step), minus(ok, step)]), plus(ok, Q(2, cut)), minus(ok, Q(2, cut)));
+  const out = [ok];
+  for (const c of cands) if (out.length < 3 && c.n > 0 && !out.some(o => same(o, c))) out.push(c);
+  return shuffle(out);
+}
+
+// ---- ui ----
+const $ = id => document.getElementById(id);
+const SCREENS = ['home', 'map', 'round', 'end', 'raceSetup', 'race', 'lab', 'learn'];
+const KIDS = ['#e85454', '#2f72d0', '#f2a516', '#2fa36b', '#9b59d0', '#e8669b', '#1fa2b5', '#8a6d3b'];
+const PRAISE = ['כל הכבוד!', 'מעולה!', 'בדיוק!', 'יפה מאוד!', 'נכון!', 'אלופה!'];
+const RACE_WHY = [
+  'כשנשאר קצת עד היעד, איזה קלף רצית לקבל? למה?',
+  'מתי כדאי לדלג על תור?',
+  'איזה קלף הכי שימושי בחפיסה הזאת? למה?',
+  'איך ידעת שקלף יעביר אותך את היעד, עוד לפני שחישבת?',
+];
+const SOUNDS = {tap: [[600, 0, .05]], yay: [[660, 0, .12], [880, .09, .12], [1320, .18, .25]], no: [[300, 0, .18]], win: [[523, 0, .18], [659, .15, .18], [784, .3, .18], [1047, .45, .5]]};
+const KEY = 'kav-hashvarim-5';
+const DEF = {stars: [], muted: false, wins: 0, losses: 0, opp: 'parent', deck: 0, target: 2};
+let S; try { S = {...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}')}; } catch { S = {...DEF}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+let R = null, G = null, lastLvl = 0, ac;
+
+const later = (fn, ms) => { const r = R; setTimeout(() => R === r && fn(), ms); };
+const laterG = (fn, ms) => { const g = G; setTimeout(() => G === g && fn(), ms); };
+
+function sound(name) {
+  if (S.muted) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    const t0 = ac.currentTime;
+    for (const [f, at, dur] of SOUNDS[name]) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t0 + at);
+      g.gain.exponentialRampToValueAtTime(.18, t0 + at + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + at + dur);
+      o.connect(g).connect(ac.destination); o.start(t0 + at); o.stop(t0 + at + dur + .05);
+    }
+  } catch {}
+}
+function burst(big) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let i = 0; i < (big ? 36 : 12); i++) {
+    const s = document.createElement('span');
+    s.textContent = pick(['⭐', '✨', '🎉', '🍕', '🌟']);
+    s.style.left = rnd(3, 95) + '%'; s.style.fontSize = rnd(18, 34) + 'px'; s.style.animationDelay = rnd(0, 350) + 'ms';
+    $('fx').append(s); setTimeout(() => s.remove(), 2000);
+  }
+}
+
+// ---- pictures ----
+// number line 0..max; cut = small ticks every 1/cut; marks = [{x or v, c, tag, dn}] (dn = under the line)
+function lineHTML({max = 1, cut = 0, cutLabels = false, marks = [], cls = '', pin = false}) {
+  const P = v => (v / max * 100).toFixed(3) + '%';
+  let h = `<div class="nl ${cls}"><div class="track" id="${pin ? 'track' : ''}"><div class="bar"></div>`;
+  if (cut) for (let k = 1; k < max * cut; k++) {
+    if (k % cut === 0) continue;
+    h += `<i class="tk mi" style="left:${P(k / cut)}"></i>`;
+    if (cutLabels) h += `<span class="lb mi" style="left:${P(k / cut)}">${st(k, cut)}</span>`;
+  }
+  for (let w = 0; w <= max; w++) h += `<i class="tk" style="left:${P(w)}"></i><span class="lb" style="left:${P(w)}">${w}</span>`;
+  for (const m of marks) h += `<span class="mk${m.dn ? ' dn' : ''}" style="left:${P(m.v ?? num(m.x))};--c:${m.c}"><span class="tag">${m.tag}</span><span class="stem"></span></span>`;
+  if (pin) h += `<span class="mk pin" id="pin" hidden style="--c:var(--b)"><span class="tag">?</span><span class="stem"></span></span>`;
+  return h + '</div></div>';
+}
+function pizzaHTML(colors) {
+  const k = colors.length, seg = 360 / k;
+  const bg = k === 1 ? colors[0] : 'conic-gradient(' + colors.map((c, i) =>
+    `#fff ${i * seg}deg ${i * seg + 1.5}deg, ${c} ${i * seg + 1.5}deg ${(i + 1) * seg - 1.5}deg, #fff ${(i + 1) * seg - 1.5}deg ${(i + 1) * seg}deg`).join(',') + ')';
+  return `<span class="pz" style="background:${bg}"></span>`;
+}
+const pieces = (r, b) => r === 1 ? `חתיכה אחת של ${ltr('1/' + b)}` : `${r} חתיכות של ${ltr('1/' + b)}`;
+const wholes = q => q === 1 ? 'פיצה שלמה אחת' : `${q} פיצות שלמות`;
+// a pizzas shared by b kids: whole pizzas go round first, the rest are cut into b slices, one slice per kid
+function shareHTML(a, b) {
+  const q = Math.floor(a / b), r = a % b, pz = [];
+  for (let i = 0; i < q * b; i++) pz.push(pizzaHTML([KIDS[i % b]]));
+  for (let i = 0; i < r; i++) pz.push(pizzaHTML(Array.from({length: b}, (_, k) => KIDS[k])));
+  const kids = Array.from({length: b}, (_, k) => `<span class="kid" style="--c:${KIDS[k]}">🙂</span>`).join('');
+  const each = q ? (r ? `${wholes(q)} ועוד ${pieces(r, b)}` : wholes(q)) : pieces(r, b);
+  return `<div class="pizzas">${pz.join('')}</div><div class="kids">${kids}</div><p class="cap">כל צבע הוא ילד אחד. כל ילד מקבל ${each}.</p>`;
+}
+function partHTML(q) {
+  const g = Array.from({length: q.d}, (_, i) => `<span class="grp${i < q.n ? ' on' : ''}">${'<i class="dot"></i>'.repeat(q.k)}</span>`).join('');
+  const cap = q.type === 'part' ? `מחלקים ${q.d * q.k} ל-${q.d} קבוצות שוות. כמה בכל קבוצה? ${ltr(`${q.n}/${q.d}`)} זה ${q.n} קבוצות.`
+    : q.type === 'whole' ? `${q.n === 1 ? 'קבוצה אחת היא' : `${q.n} קבוצות הן`} ${q.n * q.k}. כמה בכל קבוצה? בכל השלם יש ${q.d} קבוצות.`
+    : `אפשר לסדר את ה-${q.d * q.k} ב-${q.d} קבוצות שוות. כמה קבוצות צבועות?`;
+  return `<div class="groups">${g}</div><p class="cap">${cap}</p>`;
+}
+function stripHTML(on, cut, color) {
+  const bars = Math.max(1, Math.ceil(on / cut));
+  let h = `<div class="bars" style="--c:${color}">`;
+  for (let b = 0; b < bars; b++) h += '<div class="strip">' + Array.from({length: cut}, (_, i) => `<span${b * cut + i < on ? ' class="on"' : ''}></span>`).join('') + '</div>';
+  return h + '</div>';
+}
+function recutHTML(x, y, word) {
+  const L = lcm(x.d, y.d), X = x.n * L / x.d, Y = y.n * L / y.d;
+  return `<div class="strips">
+    <div class="srow"><span class="slab">${frH(x, false)}</span>${stripHTML(x.n, x.d, 'var(--a)')}</div>
+    <div class="srow"><span class="slab">${frH(y, false)}</span>${stripHTML(y.n, y.d, 'var(--b)')}</div>
+    <p class="cap">חותכים את שניהם לחתיכות של ${ltr('1/' + L)}:</p>
+    <div class="srow"><span class="slab">${st(X, L)}</span>${stripHTML(X, L, 'var(--a)')}</div>
+    <div class="srow"><span class="slab">${st(Y, L)}</span>${stripHTML(Y, L, 'var(--b)')}</div>
+    <p class="cap">${word}</p></div>`;
+}
+function opHint(q) {
+  const {x, y, op} = q, L = lcm(x.d, y.d);
+  if (!q.mixed) return recutHTML(x, y, `עכשיו החתיכות באותו גודל, ואפשר ${op === '+' ? 'לחבר' : 'לחסר'} אותן.`);
+  const wx = Math.floor(x.n / x.d), fx = T(x.n % x.d, x.d), wy = Math.floor(y.n / y.d), fy = T(y.n % y.d, y.d);
+  const X = fx.n * L / x.d, Y = fy.n * L / y.d;
+  let extra = '';
+  if (op === '+' && X + Y >= L) extra = `<p class="warn">החלקים יחד הם ${ltr(`${X + Y}/${L}`)}, יותר משלם. הופכים ${ltr(`${L}/${L}`)} לשלם נוסף.</p>`;
+  if (op === '−' && X < Y) extra = `<p class="warn">אי אפשר לחסר ${ltr(`${Y}/${L}`)} מ-${ltr(`${X}/${L}`)}. פורטים שלם אחד ל-${ltr(`${L}/${L}`)}.</p>`;
+  return `<p class="cap">שלמים: ${ltr(`${wx} ${op} ${wy}`)}<br>חלקים במכנה ${L}: ${ltr(`${fx.n}/${fx.d} = ${X}/${L}`)} , ${ltr(`${fy.n}/${fy.d} = ${Y}/${L}`)}</p>${extra}`;
+}
+function cmpWhy(q) {
+  const {x, y} = q, L = lcm(x.d, y.d), X = x.n * L / x.d, Y = y.n * L / y.d, sign = q.ans > 0 ? '>' : q.ans < 0 ? '<' : '=';
+  let s = '';
+  if (q.cat === 'sameNum') s = `בשניהם ${x.n === 1 ? 'חתיכה אחת' : `${x.n} חתיכות`}, אבל ככל שהמכנה גדול יותר, החתיכות קטנות יותר. `;
+  if (q.cat === 'nearOne') s = `לשניהם חסרה חתיכה אחת עד 1, ולשבר עם המכנה הגדול חסרה חתיכה קטנה יותר. `;
+  if (q.cat === 'half') s = 'אחד מהם קטן מחצי והשני גדול מחצי. ';
+  if (q.cat === 'equal') s = 'אלה אותו שבר בשני שמות. ';
+  return s + `${ltr(`${x.n}/${x.d} = ${X}/${L}`)} , ${ltr(`${y.n}/${y.d} = ${Y}/${L}`)}, לכן ${ltr(`${x.n}/${x.d} ${sign} ${y.n}/${y.d}`)}`;
+}
+
+// ---- screens ----
+function show(id) {
+  for (const s of SCREENS) $(s).hidden = s !== id;
+  $('homeBtn').hidden = id === 'home';
+  if (id !== 'round') R = null;
+  if (id !== 'race') G = null;
+  ({home: drawHome, map: drawMap, raceSetup: drawSetup, lab: drawLab})[id]?.();
+  scrollTo({top: 0});
+}
+function drawHome() {
+  $('hero').innerHTML = lineHTML({max: 2, cut: 4, cls: 'two', marks: [{x: T(3, 4), c: 'var(--a)', tag: st(3, 4)}, {x: T(5, 4), c: 'var(--b)', tag: st(5, 4)}, {x: T(3, 2), c: 'var(--sum)', tag: frH(T(3, 2)), dn: true}]});
+  const n = S.stars.filter(Boolean).length;
+  $('starsTxt').textContent = n ? `עברת ${n} מתוך ${LEVELS.length} שלבים` : `${LEVELS.length} שלבים`;
+}
+function drawMap() {
+  const nextI = LEVELS.findIndex((_, i) => !S.stars[i]);
+  let h = '', g = '';
+  LEVELS.forEach((l, i) => {
+    if (l.group !== g) { g = l.group; h += `<p class="group">${g}</p>`; }
+    h += `<button class="lvl${i === nextI ? ' next' : ''}" data-l="${i}" style="--c:${GROUP_COLOR[l.group]}"><span class="num">${i + 1}</span><span class="nm">${l.name}</span><span class="st" aria-label="${S.stars[i] || 0} כוכבים">${'⭐'.repeat(S.stars[i] || 0)}</span></button>`;
+  });
+  $('levels').innerHTML = h;
+}
+
+// ---- a round of one level ----
+const say = t => { $('msg').innerHTML = t; };
+function startLevel(i) {
+  lastLvl = i;
+  show('round');
+  R = {lvl: i, n: 0, total: 6, results: []};
+  $('where').textContent = `שלב ${i + 1} · ${LEVELS[i].name}`;
+  $('tip').innerHTML = '💡 ' + LEVELS[i].tip;
+  next();
+}
+function next() {
+  if (R.n >= R.total) return finish();
+  Object.assign(R, {q: draw(R.lvl), tries: 0, done: false, guess: null});
+  say(''); $('nextBtn').hidden = true; $('viz').innerHTML = '';
+  drawPath();
+  const q = R.q, k = q.kind;
+  $('lineArea').hidden = k !== 'line'; $('cmpArea').hidden = k !== 'cmp';
+  $('finArea').hidden = $('nextBox').hidden = !q.mode;
+  $('help').hidden = k === 'line' || k === 'cmp';
+  $('nextBox').hidden = !q.mode || q.mode === 'int';
+  if (k === 'line') {
+    $('task').innerHTML = `איפה נמצא השבר על הקו? הקישי על הקו או גררי<span class="big">${frH(q.x, !!q.mixed)}</span>`;
+    $('viz').innerHTML = lineHTML({max: q.max, pin: true, cls: 'pick'});
+    const nl = $('viz').querySelector('.nl');
+    Object.assign(nl, {tabIndex: 0}); nl.setAttribute('role', 'slider'); nl.setAttribute('aria-label', 'קו המספרים');
+    nl.setAttribute('aria-valuemin', '0'); nl.setAttribute('aria-valuemax', String(q.max));
+    $('checkLine').disabled = true;
+  } else if (k === 'cmp') {
+    $('task').innerHTML = 'איזה שבר גדול יותר? אם הם שווים, בחרי «שווים».';
+    $('cmpArea').innerHTML = `<button class="cfr" data-c="x">${frH(q.x, false)}</button><button class="eqb" data-c="eq">שווים</button><button class="cfr" data-c="y">${frH(q.y, false)}</button>`;
+  } else {
+    $('task').innerHTML = k === 'share' ? `${q.a === 1 ? 'פיצה אחת' : `${q.a} פיצות`} מחלקים שווה בשווה בין ${q.b} ילדים. כמה פיצה מקבל כל ילד?`
+      : k === 'part' ? q.html
+      : `<span class="big">${frH(q.x)} <span aria-hidden="true">${q.op}</span> ${frH(q.y)} = ?</span>`;
+    R.inp = {mode: q.mode, w: '', n: '', d: '', f: q.mode === 'frac' ? 'n' : 'w'};
+    if (q.mode === 'mixed' && !q.mixed && k === 'op') R.inp.f = 'n';
+    $('finCap').textContent = q.mode === 'int' ? 'כתבי מספר' : q.mode === 'frac' ? 'כתבי מונה ומכנה' : 'שלמים (אם יש), מונה ומכנה';
+    drawFin();
+  }
+}
+function drawPath() {
+  $('path').innerHTML = Array.from({length: R.total}, (_, i) => {
+    const r = R.results[i];
+    return i === R.n ? '<i class="stone here">🦉</i>' : `<i class="stone ${r || ''}">${{star: '⭐', ok: '✓', miss: '•'}[r] || ''}</i>`;
+  }).join('');
+}
+
+// number line guessing
+function setGuess(clientX) {
+  const t = $('track'); if (!t || R?.done) return;
+  const rect = t.getBoundingClientRect(), f = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  moveGuess(f * R.q.max);
+}
+function moveGuess(v) {
+  R.guess = Math.min(R.q.max, Math.max(0, v));
+  const pin = $('pin'); pin.hidden = false; pin.style.left = (R.guess / R.q.max * 100) + '%';
+  $('viz').querySelector('.nl').setAttribute('aria-valuenow', R.guess.toFixed(2));
+  $('checkLine').disabled = false;
+}
+function checkLine() {
+  if (!R || R.done || R.guess == null) return;
+  const q = R.q, err = Math.abs(R.guess - num(q.x)) / q.max, acc = Math.max(0, Math.round((1 - err) * 100));
+  const res = err <= .035 ? 'star' : err <= .08 ? 'ok' : 'miss';
+  $('viz').innerHTML = lineHTML({max: q.max, cut: q.cut, cutLabels: q.max * q.cut <= 12,
+    marks: [{x: q.x, c: 'var(--ok)', tag: frH(q.x, !!q.mixed)}, {v: R.guess, c: 'var(--b)', tag: 'את', dn: true}], cls: 'two'});
+  const w = Math.floor(q.x.n / q.x.d), r = q.x.n % q.x.d;
+  const how = w ? `<span class="mx">${frH(q.x, false)} = ${frH(q.x)}</span>: אחרי ${w === 1 ? 'שלם אחד' : `${w} שלמים`} עוד ${r === 1 ? 'חתיכה אחת' : `${r} חתיכות`} של ${ltr('1/' + q.x.d)}.`
+    : `${txt(q.x, false)} זה ${q.x.n === 1 ? 'חתיכה אחת' : `${q.x.n} חתיכות`} של ${ltr('1/' + q.x.d)}.`;
+  say((res === 'star' ? 'בול! ⭐ ' : res === 'ok' ? 'קרוב מאוד! ✓ ' : 'השבר נמצא כאן, במקום הירוק. ') + `דיוק: ${acc}%. ${how}`);
+  sound(res === 'miss' ? 'no' : 'yay'); if (res === 'star') burst(false);
+  done(res, true);
+}
+
+// typed answers
+const FIELDS = {int: ['w'], frac: ['n', 'd'], mixed: ['w', 'n', 'd']};
+function drawFin() {
+  const f = R.inp, box = k => `<button class="box ${k}${f.f === k ? ' focus' : ''}" data-f="${k}" aria-label="${{w: 'שלמים', n: 'מונה', d: 'מכנה'}[k]}: ${f[k] || 'ריק'}">${f[k]}</button>`;
+  $('fin').innerHTML = (f.mode !== 'frac' ? box('w') : '') + (f.mode !== 'int' ? `<span class="fstack">${box('n')}<hr>${box('d')}</span>` : '');
+}
+function press(k) {
+  if (!R || R.done || $('finArea').hidden) return;
+  const f = R.inp, list = FIELDS[f.mode];
+  if (k === 'go') return checkFin();
+  if (k === 'tab') f.f = list[(list.indexOf(f.f) + 1) % list.length];
+  else if (k === 'del') f[f.f] = f[f.f].slice(0, -1);
+  else if (f[f.f].length < 3) f[f.f] = (f[f.f] + k).replace(/^0(?=\d)/, '');
+  sound('tap'); drawFin();
+}
+function checkFin() {
+  const q = R.q, got = readAnswer(R.inp);
+  if (!got) return say('כתבי תשובה בתיבות 🙂');
+  if (got.need) { R.inp.f = got.need; drawFin(); return say(got.need === 'd' ? 'חסר המכנה, המספר שמתחת לקו 🙂' : 'חסר המונה, המספר שמעל הקו 🙂'); }
+  if (same(got.val, q.ans)) {
+    const note = formNote(got.typed, q.ans), first = R.tries === 0;
+    $('fin').querySelectorAll('.box').forEach(b => b.classList.add('right'));
+    say(pick(PRAISE) + (first ? ' ⭐' : ' ✓') + (note ? ` ${note}` : ''));
+    sound('yay'); burst(false);
+    return done(first ? 'star' : 'ok', !!note);
+  }
+  R.tries++; sound('no');
+  const trap = q.trap && same(got.val, q.trap);
+  if (R.tries < 2) {
+    say(trap ? trapMsg(q) : 'עוד לא. הציור יעזור 👇 נסי שוב.');
+    hint(); R.inp = {...R.inp, w: '', n: '', d: '', f: FIELDS[R.inp.mode][q.mode === 'mixed' && !q.mixed && q.kind === 'op' ? 1 : 0]}; drawFin();
+    return;
+  }
+  hint();
+  say(`התשובה היא ${txt(q.ans)}. לא נורא, ממשיכים 💪`);
+  done('miss', true);
+}
+function trapMsg(q) {
+  const big = cmp(q.x, q.y) > 0 ? q.x : q.y;
+  return q.op === '+' ? `חיברת מונים ומכנים, ויצא ${txt(q.trap, false)}. אבל ${txt(q.trap, false)} קטן מ-${txt(big, false)}, ובחיבור התוצאה צריכה לגדול! קודם חותכים לחתיכות באותו גודל 👇`
+    : `חיסרת מונים ומכנים. זה לא עובד כשהחתיכות בגודל שונה. קודם חותכים לחתיכות באותו גודל 👇`;
+}
+function hint() {
+  const q = R.q;
+  $('viz').innerHTML = q.kind === 'share' ? shareHTML(q.a, q.b) : q.kind === 'part' ? partHTML(q) : q.kind === 'op' ? opHint(q) : '';
+}
+
+// comparing
+function pickCmp(c) {
+  if (!R || R.done) return;
+  const q = R.q, want = q.ans > 0 ? 'x' : q.ans < 0 ? 'y' : 'eq';
+  const max = Math.max(1, Math.ceil(Math.max(num(q.x), num(q.y))));
+  $('viz').innerHTML = lineHTML({max, cls: 'two', marks: [{x: q.x, c: 'var(--a)', tag: frH(q.x, false)}, {x: q.y, c: 'var(--b)', tag: frH(q.y, false), dn: true}]});
+  $('cmpArea').querySelectorAll('button').forEach(b => b.classList.add(b.dataset.c === want ? 'right' : 'wrong'));
+  if (c === want) { say(pick(PRAISE) + ' ⭐ ' + cmpWhy(q)); sound('yay'); burst(false); done('star', true); }
+  else { say('לא הפעם. ' + cmpWhy(q)); sound('no'); done('miss', true); }
+}
+
+function done(result, wait) {
+  R.done = true; R.results.push(result); R.n++; drawPath();
+  if (wait) $('nextBtn').hidden = false; else later(next, 1400);
+}
+function finish() {
+  const r = R, stars = r.results.filter(x => x === 'star').length;
+  const got = stars >= 5 ? 3 : stars >= 3 ? 2 : 1;
+  S.stars[r.lvl] = Math.max(S.stars[r.lvl] || 0, got); save();
+  show('end');
+  $('endFace').textContent = got === 3 ? '🏆' : got === 2 ? '🎉' : '💪';
+  $('endTitle').textContent = `סיימת את שלב ${r.lvl + 1}!`;
+  $('endText').textContent = `${'⭐'.repeat(got)} · ${stars} מתוך ${r.total} בדיוק בפעם הראשונה`;
+  $('endWhy').innerHTML = LEVELS[r.lvl].why;
+  const more = r.lvl < LEVELS.length - 1;
+  $('endNext').hidden = !more; $('endNext').textContent = `לשלב ${r.lvl + 2} ⬅️`;
+  sound('win'); if (got === 3) burst(true);
+}
+
+// ---- race screens ----
+function drawSetup() {
+  const mark = (id, v) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v))));
+  $('segDeck').innerHTML = DECKS.map((d, i) => `<button data-v="${i}">${d.name}</button>`).join('');
+  mark('segOpp', S.opp); mark('segDeck', S.deck); mark('segTarget', S.target);
+  $('raceRecord').textContent = S.wins + S.losses ? `ניצחת ${S.wins} פעמים מתוך ${S.wins + S.losses} משחקים` : '';
+}
+const pname = i => i === 0 ? 'את' : S.opp === 'parent' ? 'ההורה' : 'הרובוט';
+const pface = i => i === 0 ? '👧' : S.opp === 'parent' ? '🧑' : '🤖';
+const PCOL = ['var(--a)', 'var(--b)'];
+const rsay = t => { $('rmsg').innerHTML = t; };
+function startRace(starter = 0) {
+  show('race');
+  G = {deck: DECKS[S.deck], target: Q(S.target), pos: [Q(0), Q(0)], turn: starter, hand: [], busy: false};
+  $('raceEnd').hidden = true; rsay('');
+  newTurn();
+}
+function drawRace() {
+  $('chips').innerHTML = [0, 1].map(i => `<div class="chip${G.turn === i ? ' on' : ''}" style="--c:${PCOL[i]}"><span class="f">${pface(i)}</span><b>${pname(i)}</b><span class="pos">${frH(G.pos[i])}</span></div>`).join('');
+  $('raceLine').innerHTML = lineHTML({max: S.target, cut: G.deck.cut, cls: 'two race',
+    marks: [{x: G.pos[0], c: PCOL[0], tag: pface(0)}, {x: G.pos[1], c: PCOL[1], tag: pface(1), dn: true}]});
+}
+const robotTurn = () => G.turn === 1 && S.opp === 'robot';
+function newTurn() {
+  G.hand = deal(G.deck); G.sel = null; G.busy = robotTurn();
+  $('opts').innerHTML = ''; $('ask').hidden = true;
+  $('turn').textContent = G.turn === 0 ? 'התור שלך! בחרי קלף' : `התור של ${pname(1)}`;
+  drawRace(); drawHand();
+  $('pass').disabled = G.busy;
+  if (G.busy) laterG(robotMove, 1200);
+}
+function drawHand() {
+  $('hand').innerHTML = G.hand.map((c, i) => `<button class="cardf" data-i="${i}" aria-pressed="${G.sel === i}"${G.busy ? ' disabled' : ''}>${frH(c)}</button>`).join('');
+}
+function chooseCard(i) {
+  if (G.busy) return;
+  G.sel = i; drawHand(); sound('tap');
+  $('ask').hidden = false; $('ask').textContent = G.turn === 0 ? 'לאן תגיעי?' : 'לאן מגיעים?';
+  $('opts').innerHTML = raceOptions(G.pos[G.turn], G.hand[i], G.deck.cut).map(o => `<button class="opt" data-o="${o.n}/${o.d}">${frH(o)}</button>`).join('');
+}
+function answerRace(o) {
+  if (G.busy || G.sel == null) return;
+  const [n, d] = o.split('/').map(Number);
+  move(same(T(n, d), plus(G.pos[G.turn], G.hand[G.sel])));
+}
+function move(right) {
+  G.busy = true; drawHand(); $('pass').disabled = true;
+  const p = G.turn, from = G.pos[p], card = G.hand[G.sel], to = plus(from, card);
+  const eq = `<span class="mx">${frH(from)} + ${frH(card)} = ${frH(to)}</span>`;
+  if (!right) { sound('no'); rsay(`לא בדיוק: ${eq}. התור עובר.`); return laterG(endTurn, 2600); }
+  if (cmp(to, G.target) > 0) { sound('no'); rsay(`${eq}, וזה יותר מ-${S.target}. עברת את היעד, נשארים במקום.`); return laterG(endTurn, 2600); }
+  G.pos[p] = to; sound('yay'); drawRace();
+  if (same(to, G.target)) return laterG(() => raceWin(p), 700);
+  rsay(`${eq} 🗣️ ${p === 0 ? 'אמרי את זה בקול!' : 'אומרים את זה בקול!'}`);
+  laterG(endTurn, 2400);
+}
+function endTurn() { G.turn = 1 - G.turn; newTurn(); }
+function robotMove() {
+  const i = robotPick(G.pos[1], G.target, G.hand);
+  if (i < 0) { rsay('לרובוט אין קלף מתאים. הוא מדלג.'); return laterG(endTurn, 1800); }
+  G.sel = i; drawHand();
+  laterG(() => move(true), 800);
+}
+function raceWin(p) {
+  if (p === 0) S.wins++; else S.losses++;
+  save(); sound('win'); burst(true);
+  $('raceEnd').hidden = false;
+  $('winFace').textContent = p === 0 ? '🏆' : pface(1);
+  $('winTitle').textContent = p === 0 ? `ניצחת! נחתת בדיוק על ${S.target}` : `${pname(1)} נחת בדיוק על ${S.target}`;
+  $('winWhy').textContent = pick(RACE_WHY);
+  $('turn').textContent = ''; $('hand').innerHTML = ''; $('opts').innerHTML = ''; $('ask').hidden = true; rsay('');
+  G.winner = p;
+}
+
+// ---- lab ----
+const LAB = {a: T(1, 2), b: T(1, 3)};
+function drawLab() {
+  const {a, b} = LAB, s = plus(a, b), max = Math.min(4, Math.max(1, Math.ceil(num(s))));
+  $('labA').innerHTML = frH(a, false); $('labB').innerHTML = frH(b, false);
+  $('labLine').innerHTML = lineHTML({max, cls: 'two', marks: [{x: a, c: 'var(--a)', tag: frH(a, false)}, {x: b, c: 'var(--b)', tag: frH(b, false), dn: true}]});
+  const L = lcm(a.d, b.d);
+  $('labStrips').innerHTML = L <= 24 ? recutHTML(a, b, `במכנה ${L} קל לחבר, לחסר ולהשוות.`) : `<p class="cap">המכנה המשותף הוא ${L}. זה יותר מדי חתיכות לציור, אבל הרעיון אותו רעיון.</p>`;
+  const sign = cmp(a, b) > 0 ? '>' : cmp(a, b) < 0 ? '<' : '=';
+  const d = cmp(a, b) >= 0 ? minus(a, b) : null;
+  $('labRes').innerHTML = `<span class="eq">${frH(a, false)} ${sign} ${frH(b, false)}</span><span class="eq">${frH(a, false)} + ${frH(b, false)} = ${frH(s)}</span>`
+    + (d ? `<span class="eq">${frH(a, false)} − ${frH(b, false)} = ${frH(d)}</span>` :'<span class="no">השבר האדום קטן מהכחול, אז את ההפרש לא מחשבים כאן.</span>');
+}
+function labStep(spec) {
+  const [w, k, dir] = spec.split(','), f = {...LAB[w]};
+  f[k] += +dir;
+  if (f.d < 1 || f.d > 12 || f.n < 0 || f.n > 2 * f.d) return;
+  LAB[w] = f; sound('tap'); drawLab();
+}
+
+// ---- learn ----
+function drawLearn() {
+  $('lessons').innerHTML = `
+  <article class="lesson"><h3>1. שבר הוא מקום על קו המספרים</h3>
+    <p>${ltr('3/4')} זה 3 קפיצות של רבע מ-0. כל שבר הוא מספר שיש לו מקום על הקו, בדיוק כמו 1 או 2.</p>
+    ${lineHTML({max: 1, cut: 4, cutLabels: true, marks: [{x: T(3, 4), c: 'var(--a)', tag: st(3, 4)}]})}
+    <p>שבר שהמונה שלו גדול מהמכנה נמצא אחרי 1: ${ltr('5/4')} זה 1 ועוד רבע.</p>
+    ${lineHTML({max: 2, cut: 4, cutLabels: true, marks: [{x: T(5, 4), c: 'var(--b)', tag: st(5, 4)}]})}
+    <div class="row"><button class="btn" data-l="0">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>2. שבר הוא חילוק</h3>
+    <p>3 פיצות ל-4 ילדים: חותכים כל פיצה ל-4, וכל ילד מקבל חתיכה מכל פיצה. ${ltr('3 : 4 = 3/4')}</p>
+    ${shareHTML(3, 4)}
+    <p>7 פיצות ל-3 ילדים: ${ltr('7 : 3 = 2')} ושארית 1. כל ילד מקבל 2 פיצות שלמות, ואת הפיצה שנשארה חותכים ל-3. כל ילד מקבל ${txt(T(7, 3))}.</p>
+    ${shareHTML(7, 3)}
+    <div class="row"><button class="btn" data-l="3">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>3. איך משווים שברים?</h3>
+    <ul>
+      <li><b>אותו מונה:</b> ${ltr('1/5 < 1/3')}. מכנה גדול יותר אומר חתיכות קטנות יותר.</li>
+      <li><b>משווים לחצי:</b> ${ltr('3/8')} קטן מחצי ו-${ltr('4/7')} גדול מחצי, אז ${ltr('3/8 < 4/7')}.</li>
+      <li><b>כמה חסר עד 1:</b> ל-${ltr('7/8')} חסרה שמינית ול-${ltr('5/6')} חסרה שישית. שמינית קטנה יותר, אז ${ltr('7/8')} גדול יותר.</li>
+      <li><b>מכנה משותף:</b> ${ltr('2/3 = 8/12')} ו-${ltr('3/4 = 9/12')}, אז ${ltr('2/3 < 3/4')}.</li>
+    </ul>
+    <div class="row"><button class="btn" data-l="6">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>4. חיבור וחיסור עם מכנים שונים</h3>
+    <p>אפשר לחבר רק חתיכות באותו גודל. לכן קודם חותכים את שני השברים לחתיכות שוות:</p>
+    ${recutHTML(T(1, 2), T(1, 3), `${ltr('1/2 + 1/3 = 3/6 + 2/6 = 5/6')}`)}
+    <ul>
+      <li>מכנה אחד כפולה של השני: ${ltr('1/2 + 1/4 = 2/4 + 1/4')}</li>
+      <li>למכנים יש גורם משותף: ${ltr('1/4 + 1/6 = 3/12 + 2/12')}</li>
+      <li>מכנים זרים, כופלים אותם: ${ltr('1/3 + 1/4 = 4/12 + 3/12')}</li>
+    </ul>
+    <p class="warn">טעות נפוצה: ${ltr('1/2 + 1/3 = 2/5')}. אבל ${ltr('2/5')} קטן מ-${ltr('1/2')}, ובחיבור התוצאה צריכה לגדול!</p>
+    <div class="row"><button class="btn" data-l="7">לתרגול ⬅️</button></div></article>`;
+}
+
+// ---- events ----
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if (go) { if (go.dataset.go === 'learn') drawLearn(); return show(go.dataset.go); }
+  const lvl = e.target.closest('[data-l]');
+  if (lvl) return startLevel(+lvl.dataset.l);
+  const lab = e.target.closest('[data-lab]');
+  if (lab) return labStep(lab.dataset.lab);
+});
+$('pad').onclick = e => { const b = e.target.closest('button'); if (b) press(b.dataset.k || b.textContent); };
+$('fin').onclick = e => { const b = e.target.closest('[data-f]'); if (b && R && !R.done) { R.inp.f = b.dataset.f; drawFin(); } };
+$('nextBox').onclick = () => press('tab');
+$('cmpArea').onclick = e => { const b = e.target.closest('[data-c]'); if (b) pickCmp(b.dataset.c); };
+$('checkLine').onclick = checkLine;
+$('nextBtn').onclick = () => R && next();
+$('help').onclick = () => R && !R.done && hint();
+$('skip').onclick = () => { if (R && !R.done) next(); };
+$('endNext').onclick = () => startLevel(lastLvl + 1);
+$('endAgain').onclick = () => startLevel(lastLvl);
+$('viz').addEventListener('pointerdown', e => {
+  if (!R || R.done || R.q.kind !== 'line' || !e.target.closest('.nl')) return;
+  e.preventDefault(); e.target.closest('.nl').setPointerCapture?.(e.pointerId); setGuess(e.clientX); R.drag = true;
+});
+$('viz').addEventListener('pointermove', e => { if (R?.drag) setGuess(e.clientX); });
+addEventListener('pointerup', () => { if (R) R.drag = false; });
+$('viz').addEventListener('keydown', e => {
+  if (!R || R.done || R.q.kind !== 'line') return;
+  const step = R.q.max / 100;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); moveGuess((R.guess ?? 0) + step); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); moveGuess((R.guess ?? 0) - step); }
+  if (e.key === 'Enter') { e.preventDefault(); checkLine(); }
+});
+addEventListener('keydown', e => {
+  if (!R || $('finArea').hidden || R.done) return;
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === 'Backspace') press('del');
+  else if (e.key === 'Enter') { e.preventDefault(); press('go'); }
+  else if (e.key === '/' || e.key === ' ') { e.preventDefault(); press('tab'); }
+});
+for (const id of ['segOpp', 'segDeck', 'segTarget']) $(id).onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const v = b.dataset.v;
+  if (id === 'segOpp') S.opp = v; else if (id === 'segDeck') S.deck = +v; else S.target = +v;
+  save(); drawSetup(); sound('tap');
+};
+$('raceGo').onclick = () => startRace(0);
+$('raceAgain').onclick = () => startRace(1 - G.winner); // whoever lost goes first
+$('hand').onclick = e => { const b = e.target.closest('[data-i]'); if (b && G) chooseCard(+b.dataset.i); };
+$('opts').onclick = e => { const b = e.target.closest('[data-o]'); if (b && G) answerRace(b.dataset.o); };
+$('pass').onclick = () => { if (G && !G.busy) { G.busy = true; rsay(G.turn === 0 ? 'דילגת על התור.' : 'מדלגים על התור.'); laterG(endTurn, 1000); } };
+$('mute').onclick = () => { S.muted = !S.muted; save(); $('mute').textContent = S.muted ? '🔇' : '🔊'; };
+$('mute').textContent = S.muted ? '🔇' : '🔊';
+show('home');
+</script>
+
+</html>

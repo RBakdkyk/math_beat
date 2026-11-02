@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="he">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>קו העשרוניים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Secular+One&display=swap">
+<style>
+/* layout: same family as "קו השברים": one play card on graph paper, the yellow number line, plus a place-value table where the decimal point stays put */
+:root{
+  --bg:#e3e7ff; --grid:#d0d7fa; --card:#ffffff; --ink:#1d2742; --muted:#58668a; --line:#dadff4; --key:#eff1ff; --shadow:#a7b2ec;
+  --tape:#ffc83d; --tape-ink:#6b4a00; --a:#e85454; --b:#2f72d0; --sum:#7a4bc9; --ok:#15824f; --soft:#fff3c4; --warn:#b4530b; --tint:#fff6dc;
+  --display:"Secular One","Rubik",system-ui,"Arial Hebrew",sans-serif; --body:"Rubik",system-ui,"Arial Hebrew",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px;
+  color:var(--ink);font-family:var(--body);font-size:16px;padding-block:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font-family:inherit;color:var(--ink);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+button:focus-visible,.nl:focus-visible{outline:3px solid var(--b);outline-offset:3px}
+main{max-width:620px;margin:0 auto;background:var(--card);border-radius:28px;padding:18px;display:grid;gap:14px;box-shadow:0 8px 0 var(--shadow)}
+.stack{display:grid;gap:14px}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:400;text-wrap:balance}
+h1{flex:1;text-align:center;font-size:1.85rem} h2{text-align:center;font-size:1.5rem} h3{font-size:1.25rem}
+p{margin:0}
+.sub{text-align:center;color:var(--muted);text-wrap:balance}
+header{display:flex;align-items:center;gap:8px}
+.icon{font-size:1.4rem;width:48px;height:48px;border-radius:14px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.icon:active,.btn:active,.pad button:active,.lvl:active,.mode:active,.cfr:active,.eqb:active,.opt:active,.cardf:active,.seg button:active,.pvbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.btn{font:700 1.15rem var(--body);min-height:48px;padding:12px 20px;border-radius:16px;border:0;background:var(--key);box-shadow:0 5px 0 var(--line)}
+.btn.main{background:var(--b);color:#fff;box-shadow:0 5px 0 #1f4f94}
+.btn:disabled{opacity:.45;cursor:default}
+.tool{font:600 1rem var(--body);min-height:44px;background:none;border:2px solid var(--line);border-radius:14px;padding:8px 12px}
+.tools{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+
+/* numbers: always left to right */
+.mx{direction:ltr;unicode-bidi:isolate;display:inline-flex;align-items:center;gap:.16em;vertical-align:middle;font-variant-numeric:tabular-nums}
+.mx b{font-weight:inherit}
+.fr{display:inline-flex;flex-direction:column;align-items:center;line-height:1.08}
+.fr i{font-style:normal;padding:0 .14em}
+.fr i:first-child{border-bottom:.09em solid currentColor}
+
+/* number line */
+.nl{direction:ltr;position:relative;height:122px;touch-action:none;user-select:none;-webkit-user-select:none}
+.nl.two{height:170px}
+.nl .track{position:absolute;inset:0 24px}
+.nl .bar{position:absolute;left:-10px;right:-10px;top:64px;height:14px;border-radius:7px;background:var(--tape);box-shadow:inset 0 -3px 0 rgba(107,74,0,.2)}
+.nl .tk{position:absolute;top:58px;width:3px;height:26px;margin-left:-1.5px;border-radius:2px;background:var(--tape-ink)}
+.nl .tk.mi{top:62px;height:18px;width:2px;margin-left:-1px;opacity:.75}
+.nl .lb{position:absolute;top:88px;transform:translateX(-50%);font:700 1.05rem var(--body);white-space:nowrap}
+.nl .lb.mi{font-size:.74rem;font-weight:500;color:var(--muted)}
+.nl.two .lb{top:142px}
+.nl .mk{position:absolute;bottom:calc(100% - 62px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.nl .mk.dn{bottom:auto;top:80px;flex-direction:column-reverse}
+.nl .tag{padding:3px 7px;border-radius:10px;background:var(--c,var(--ink));color:#fff;font:700 1rem var(--body);white-space:nowrap}
+.nl .tag .fr{font-size:.9em}
+.nl .stem{width:3px;height:12px;background:var(--c,var(--ink))}
+.nl .pin .tag{font-size:1.1rem;padding:4px 10px}
+.nl.pick{cursor:pointer}
+.nl.race .mk .tag{background:var(--card);color:var(--ink);border:3px solid var(--c);font-size:1.3rem;padding:0 4px}
+
+/* home */
+.hero{background:var(--key);border-radius:22px;padding:8px 6px 0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{display:grid;gap:3px;justify-items:center;align-content:start;padding:16px 8px;border-radius:22px;border:0;color:#fff;box-shadow:0 6px 0 rgba(29,39,66,.22)}
+.mode .em{font-size:2.2rem;line-height:1.2} .mode b{font:400 1.3rem var(--display)} .mode small{font-size:.92rem;font-weight:500;text-align:center}
+.m-map{background:var(--b)} .m-race{background:var(--tape);color:var(--ink)} .m-lab{background:var(--a)} .m-learn{background:var(--sum)}
+.parents{background:var(--soft);border-radius:16px;padding:10px 14px;font-size:.95rem;line-height:1.5}
+
+/* level map */
+.levels{display:grid;gap:8px}
+.lvl{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;text-align:start;padding:10px 12px;border-radius:18px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.lvl .num{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:400 1.3rem var(--display);color:#fff;background:var(--c)}
+.lvl .nm{font-weight:600;line-height:1.3}
+.lvl .st{font-size:.95rem;white-space:nowrap}
+.lvl.next{outline:3px solid var(--tape);outline-offset:2px}
+.group{margin:6px 0 0;font:400 1.05rem var(--display);color:var(--muted)}
+
+/* round */
+.where{text-align:center;color:var(--muted);font-weight:600}
+.path{display:flex;align-items:center;justify-content:center;gap:6px}
+.stone{width:30px;height:30px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:.95rem;font-style:normal}
+.stone.star{background:var(--soft)} .stone.ok{background:#d3f0e0} .stone.miss{background:#f6e3d6}
+.stone.here{background:var(--card);outline:3px solid var(--b)}
+.tip{background:var(--key);border-radius:14px;padding:8px 12px;font-size:.95rem;line-height:1.5}
+.task{text-align:center;font:500 1.25rem/1.65 var(--body);text-wrap:balance}
+.task .fr{font-size:.92em}
+.task .big{display:block;direction:ltr;unicode-bidi:isolate;margin-top:2px;font:400 2.7rem var(--display);color:var(--b)}
+.viz{display:grid;gap:10px}
+.viz:empty{display:none}
+.cap{text-align:center;color:var(--muted);line-height:1.55;text-wrap:balance}
+.say{display:flex;align-items:center;gap:10px;min-height:58px;background:var(--key);border-radius:18px;padding:6px 12px}
+.say .face{font-size:2.2rem;line-height:1}
+.say p{flex:1;min-width:0;font:500 1.1rem/1.5 var(--body)}
+.fin-cap{text-align:center;color:var(--muted);font-size:.9rem}
+.fin{direction:ltr;display:flex;align-items:center;justify-content:center;gap:12px}
+.fstack{display:grid;justify-items:center;gap:6px}
+.fstack hr{width:84px;margin:0;border:0;border-top:4px solid var(--ink);border-radius:2px}
+.box{min-width:70px;height:58px;padding:0 8px;border:3px dashed var(--b);border-radius:14px;background:var(--card);font:400 2rem var(--display)}
+.box.w{height:70px;min-width:62px}
+.box.focus{border-style:solid;background:var(--soft)}
+.box.right,.dbox.right{border:3px solid var(--ok);color:var(--ok)}
+.dbox{min-width:190px;height:66px;padding:0 14px;border:3px solid var(--b);border-radius:16px;background:var(--soft);display:grid;place-items:center;font:400 2.3rem var(--display);letter-spacing:.02em}
+.dbox:empty::before{content:"?";color:var(--muted)}
+.pad{direction:ltr;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pad button{font:400 1.8rem var(--display);min-height:54px;border-radius:16px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line)}
+.pad .dot{font-size:2.4rem;color:var(--a)}
+.pad .go{grid-column:1/-1;background:var(--ok);color:#fff;font:700 1.25rem var(--body)}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.cfr{font:400 2.4rem var(--display);padding:18px 6px;border-radius:20px;border:0;background:var(--key);box-shadow:0 5px 0 var(--line)}
+.eqb{font:700 1.1rem var(--body);padding:14px 10px;border-radius:16px;border:0;background:var(--soft);box-shadow:0 4px 0 var(--line)}
+.cfr.right,.eqb.right,.opt.right{outline:4px solid var(--ok)} .cfr.wrong,.eqb.wrong,.opt.wrong{opacity:.5}
+.opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.opt{min-width:86px;min-height:64px;padding:8px 14px;border-radius:16px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line);font:400 1.7rem var(--display)}
+.opt small{display:block;font:500 .85rem var(--body);color:var(--muted)}
+.slots{direction:ltr;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:60px}
+.slot{min-width:74px;height:56px;padding:0 8px;border:3px dashed var(--line);border-radius:14px;display:grid;place-items:center;font:400 1.5rem var(--display)}
+.slot.full{border-style:solid;border-color:var(--b);background:var(--key)}
+.lt{font:400 1.5rem var(--display);color:var(--muted)}
+.opt.used{visibility:hidden}
+
+/* pictures */
+.pv{direction:ltr;display:grid;grid-template-columns:repeat(4,1fr) 16px repeat(3,1fr);gap:4px;align-items:end}
+.pv .h{font-size:.7rem;line-height:1.15;color:var(--muted);text-align:center;align-self:end}
+.pv .c{height:48px;border-radius:10px;background:var(--key);display:grid;place-items:center;font:400 1.7rem var(--display);overflow:hidden}
+.pv .c.f{background:var(--tint)}
+.pv .c.hl{outline:3px solid var(--a)}
+.pv .c span{display:block}
+.pv.slide .c span{animation:slide .5s ease-out}
+@keyframes slide{from{transform:translateX(calc(var(--s,0) * 112%))}}
+.pv .pt{height:48px;display:grid;place-items:end center;font:400 2.6rem/1 var(--display);color:var(--a)}
+button.c{border:0;font:400 1.7rem var(--display)}
+.grid100{direction:ltr;display:grid;grid-template-columns:repeat(10,1fr);gap:2px;width:200px;max-width:100%;aspect-ratio:1;margin:0 auto}
+.grid100 i{background:var(--line);border-radius:2px}
+.grid100 i.on{background:var(--b)}
+.colsum{direction:ltr;justify-self:center;font:600 1.6rem/1.4 var(--mono);white-space:pre;background:var(--key);border-radius:14px;padding:10px 18px}
+.colsum hr{border:0;border-top:3px solid var(--ink);margin:4px 0}
+
+/* race */
+.seg{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.seg button{min-height:48px;padding:10px 14px;border-radius:14px;border:3px solid transparent;background:var(--key);box-shadow:0 4px 0 var(--line);font-weight:600}
+.seg button[aria-pressed="true"]{border-color:var(--tape);background:var(--soft)}
+.label{text-align:center;font-weight:700}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:16px;background:var(--key);border:3px solid transparent}
+.chip.on{border-color:var(--c)}
+.chip .f{font-size:1.8rem} .chip b{flex:1} .chip .pos{font:400 1.4rem var(--display)}
+.turn{text-align:center;font:400 1.3rem var(--display)}
+.flipb{justify-self:center;background:var(--sum);color:#fff;border-radius:12px;padding:6px 14px;font-weight:700}
+.hand{display:flex;justify-content:center;gap:12px}
+.cardf{width:78px;height:104px;border-radius:14px;border:3px solid var(--tape);background:var(--card);font:400 1.9rem var(--display);box-shadow:0 5px 0 var(--line)}
+.cardf[aria-pressed="true"]{background:var(--soft);transform:translateY(-6px)}
+.cardf:disabled{cursor:default}
+.ask{text-align:center;font-weight:700}
+.win{display:grid;gap:12px;justify-items:center;text-align:center;background:var(--soft);border-radius:20px;padding:16px}
+.win .big{font-size:3.6rem;line-height:1}
+
+/* lab + learn */
+.pvbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pvbtn{direction:ltr;min-height:50px;border-radius:14px;border:0;background:var(--key);box-shadow:0 4px 0 var(--line);font:400 1.25rem var(--display)}
+.pvbtn.up{color:var(--ok)} .pvbtn.dn{color:var(--b)}
+.labout{display:grid;gap:6px;text-align:center;font-size:1.1rem;line-height:1.6}
+.labout .eq{direction:ltr;unicode-bidi:isolate;font:400 1.6rem var(--display)}
+.lesson{display:grid;gap:10px;padding:14px;border:2px solid var(--line);border-radius:20px}
+.lesson ul{margin:0;padding-inline-start:20px;display:grid;gap:6px;line-height:1.6}
+.lesson p{line-height:1.6}
+.warn{background:#fdeee3;color:var(--warn);border-radius:12px;padding:8px 12px;line-height:1.55}
+.pair{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;align-items:center}
+.pair figure{margin:0;display:grid;gap:6px;justify-items:center}
+.pair figcaption{font:400 1.3rem var(--display)}
+
+/* end */
+.end{display:grid;gap:12px;justify-items:center;text-align:center}
+.end .big{font-size:5rem;line-height:1.1}
+.why{width:100%;display:grid;gap:4px;text-align:start;background:var(--soft);border-radius:18px;padding:12px 14px;line-height:1.55}
+.why b{font:400 1.1rem var(--display)}
+
+#fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+#fx span{position:absolute;top:-50px;animation:fall 1.5s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(300deg)}}
+@media (hover:hover){.lvl:hover,.mode:hover,.cfr:hover,.opt:hover,.cardf:hover{filter:brightness(1.03)}}
+@media (max-width:420px){.cardf{width:68px;height:94px}.cfr{font-size:2rem}.pv .c{font-size:1.4rem;height:42px}.pv .h{font-size:.6rem}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div id="fx" aria-hidden="true"></div>
+<main dir="rtl">
+  <header>
+    <button class="icon" id="homeBtn" data-go="home" aria-label="למסך הבית" hidden>🏠</button>
+    <h1>קו העשרוניים</h1>
+    <button class="icon" id="mute" aria-label="צלילים">🔊</button>
+  </header>
+
+  <section id="home" class="stack">
+    <div class="hero" id="hero" aria-hidden="true"></div>
+    <p class="sub">שברים עשרוניים של כיתה ה׳: עשיריות, מאיות ואלפיות, עשרוני ושבר, כפל וחילוק ב-10, 100 ו-1,000, השוואה, חיבור וחיסור ועיגול</p>
+    <div class="modes">
+      <button class="mode m-map" data-go="map"><span class="em">🗺️</span><b>מסע השלבים</b><small id="starsTxt"></small></button>
+      <button class="mode m-race" data-go="raceSetup"><span class="em">🔄</span><b>היפוך!</b><small>מרוץ שברים ועשרוניים נגד הורה או רובוט</small></button>
+      <button class="mode m-lab" data-go="lab"><span class="em">🎛️</span><b>מכונת הספרות</b><small>כופלים ומחלקים ב-10 ורואים מה זז</small></button>
+      <button class="mode m-learn" data-go="learn"><span class="em">📖</span><b>איך זה עובד?</b><small>5 רעיונות חשובים</small></button>
+    </div>
+    <p class="parents"><b>להורים:</b> בסוף כל סיבוב מופיעה שאלה לשיחה. כדאי לעצור ולשאול אותה. ההסבר במילים שלה הוא מה שהופך משחק להבנה.</p>
+  </section>
+
+  <section id="map" class="stack" hidden>
+    <h2>מסע השלבים</h2>
+    <p class="sub">כל השלבים פתוחים. השלב המסומן בצהוב הוא הבא בתור.</p>
+    <div class="levels" id="levels"></div>
+  </section>
+
+  <section id="round" class="stack" hidden>
+    <p class="where" id="where"></p>
+    <div class="path" id="path"></div>
+    <p class="tip" id="tip"></p>
+    <div class="task" id="task"></div>
+    <div class="viz" id="viz"></div>
+    <div class="cmp" id="cmpArea" hidden></div>
+    <div class="stack" id="ordArea" hidden><div class="slots" id="slots"></div><div class="opts" id="ordPool"></div></div>
+    <div class="opts" id="mcArea" hidden></div>
+    <div class="row" id="lineArea" hidden><button class="btn main" id="checkLine" disabled>בדיקה ✓</button></div>
+    <div class="stack" id="finArea" hidden>
+      <p class="fin-cap" id="finCap"></p>
+      <div class="fin" id="fin"></div>
+      <div class="pad" id="pad">
+        <button>1</button><button>2</button><button>3</button><button data-k="del" aria-label="מחיקה">⌫</button>
+        <button>4</button><button>5</button><button>6</button><button data-k="." class="dot" id="dotKey" aria-label="נקודה עשרונית">.</button>
+        <button>7</button><button>8</button><button>9</button><button>0</button>
+        <button data-k="go" class="go">✓ בדיקה</button>
+      </div>
+    </div>
+    <div class="say"><span class="face" aria-hidden="true">🦉</span><p id="msg" role="status" aria-live="polite"></p></div>
+    <div class="row"><button class="btn main" id="nextBtn" hidden>ממשיכים ⬅️</button></div>
+    <div class="tools">
+      <button class="tool" id="nextBox">⇥ לתיבה הבאה</button>
+      <button class="tool" id="help">✏️ ציור עזר</button>
+      <button class="tool" id="skip">🔄 שאלה אחרת</button>
+    </div>
+  </section>
+
+  <section id="end" class="end" hidden>
+    <div class="big" id="endFace">🎉</div>
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <div class="why"><b>💬 שאלה לשיחה עם ההורה</b><p id="endWhy"></p></div>
+    <div class="row">
+      <button class="btn main" id="endNext"></button>
+      <button class="btn" id="endAgain">עוד סיבוב 🔁</button>
+      <button class="btn" data-go="map">🗺️ לשלבים</button>
+    </div>
+  </section>
+
+  <section id="raceSetup" class="stack" hidden>
+    <h2>🔄 היפוך!</h2>
+    <p class="sub">בכל תור מקבלים 3 קלפים, חלקם שברים וחלקם עשרוניים. בוחרים אחד ומחשבים לאן מגיעים. בתור <b>«היפוך»</b> עונים בשבר במקום בעשרוני. מי שנוחת <b>בדיוק</b> על היעד מנצח, ומי שעובר אותו נשאר במקום.</p>
+    <p class="label">נגד מי?</p>
+    <div class="seg" id="segOpp"><button data-v="parent">🧑 הורה</button><button data-v="robot">🤖 רובוט</button></div>
+    <p class="label">אילו קלפים?</p>
+    <div class="seg" id="segDeck"></div>
+    <p class="label">מה היעד?</p>
+    <div class="seg" id="segTarget"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+    <div class="row"><button class="btn main" id="raceGo">מתחילים! 🏁</button></div>
+    <p class="sub" id="raceRecord"></p>
+  </section>
+
+  <section id="race" class="stack" hidden>
+    <div class="board" id="chips"></div>
+    <div id="raceLine"></div>
+    <p class="turn" id="turn"></p>
+    <p class="flipb" id="flipb" hidden>🔄 היפוך! הפעם עונים בשבר</p>
+    <div class="hand" id="hand"></div>
+    <p class="ask" id="ask" hidden></p>
+    <div class="opts" id="opts"></div>
+    <div class="say"><span class="face" aria-hidden="true">🦉</span><p id="rmsg" role="status" aria-live="polite"></p></div>
+    <div class="row"><button class="tool" id="pass">🙅 אין קלף מתאים, מדלגים</button></div>
+    <div class="win" id="raceEnd" hidden>
+      <div class="big" id="winFace"></div>
+      <h2 id="winTitle"></h2>
+      <div class="why"><b>💬 שאלה לשיחה</b><p id="winWhy"></p></div>
+      <div class="row"><button class="btn main" id="raceAgain">עוד סיבוב 🔁</button><button class="btn" data-go="raceSetup">⚙️ הגדרות</button></div>
+    </div>
+  </section>
+
+  <section id="lab" class="stack" hidden>
+    <h2>🎛️ מכונת הספרות</h2>
+    <p class="sub">הקישי על משבצת כדי לשנות ספרה. אחר כך כפלי או חלקי ב-10, 100 או 1,000, ושימי לב: הנקודה נשארת במקום, והספרות זזות.</p>
+    <div id="labPv"></div>
+    <div class="pvbtns">
+      <button class="pvbtn up" data-mul="10">× 10</button><button class="pvbtn up" data-mul="100">× 100</button><button class="pvbtn up" data-mul="1000">× 1,000</button>
+      <button class="pvbtn dn" data-div="10">: 10</button><button class="pvbtn dn" data-div="100">: 100</button><button class="pvbtn dn" data-div="1000">: 1,000</button>
+    </div>
+    <div class="labout" id="labOut" role="status" aria-live="polite"></div>
+    <div class="row"><button class="tool" id="labRand">🎲 מספר אחר</button><button class="tool" id="labZero">0️⃣ איפוס</button></div>
+  </section>
+
+  <section id="learn" class="stack" hidden>
+    <h2>📖 איך זה עובד?</h2>
+    <div class="stack" id="lessons"></div>
+  </section>
+</main>
+
+<script>
+// ---- math (pure, no DOM) ----
+const rnd = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = a => a[rnd(0, a.length - 1)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+const T = (n, d = 1) => ({n, d});
+const Q = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return {n: n / g, d: d / g}; };
+const same = (x, y) => x.n * y.d === y.n * x.d;
+const reduced = (n, d) => gcd(n, d) === 1;
+
+// a decimal is a whole number of thousandths: 3.25 is 3250, never a float. p = how many digits to show after the point.
+const K = 1000;
+const places = v => v % 1000 === 0 ? 0 : v % 100 === 0 ? 1 : v % 10 === 0 ? 2 : 3;
+function dstr(v, p = places(v)) {
+  const w = Math.floor(v / K), f = String(v % K).padStart(3, '0');
+  return w + (p ? '.' + f.slice(0, p) : '');
+}
+const fv = x => x.n * K / x.d; // fraction → thousandths (only for denominators that divide 1,000)
+const digitsAfter = (v, p) => (v % K) / 10 ** (3 - p); // 3.07 with p=2 → 7
+const roundTo = (v, unit) => Math.floor((v + unit / 2) / unit) * unit;
+
+// text and markup (strings only)
+const ltr = s => `<span class="mx">${s}</span>`; // left-to-right and never split across lines (all text goes through innerHTML)
+const st = (n, d) => `<span class="fr"><i>${n}</i><i>${d}</i></span>`;
+function frH(x, mixed = true) {
+  if (x.d === 1) return `<span class="mx">${x.n}</span>`;
+  const w = Math.floor(x.n / x.d), r = x.n % x.d;
+  if (!mixed || w === 0) return `<span class="mx">${st(x.n, x.d)}</span>`;
+  return r ? `<span class="mx"><b>${w}</b>${st(r, x.d)}</span>` : `<span class="mx">${w}</span>`;
+}
+function txt(x, mixed = true) {
+  const w = Math.floor(x.n / x.d), r = x.n % x.d;
+  if (r === 0) return ltr(String(w));
+  if (!mixed || w === 0) return ltr(`${x.n}/${x.d}`);
+  return `${ltr(String(w))} ו-${ltr(`${r}/${x.d}`)}`;
+}
+const dH = (v, p) => `<span class="mx">${dstr(v, p)}</span>`;
+const dT = (v, p) => ltr(dstr(v, p));
+// an "item" is a number shown either as a decimal {v, p} or as a fraction {f}
+const itemV = it => it.f ? fv(it.f) : it.v;
+const itemH = it => it.f ? frH(it.f) : dH(it.v, it.p);
+const itemT = it => it.f ? txt(it.f) : dT(it.v, it.p);
+const D = (v, p) => ({v, p: p ?? places(v)});
+const F = (n, d) => ({f: T(n, d)});
+
+const PLACE = [null, ['עשירית אחת', 'עשיריות'], ['מאית אחת', 'מאיות'], ['אלפית אחת', 'אלפיות']];
+const PLACE_NAME = [null, 'העשיריות', 'המאיות', 'האלפיות'];
+const unitWord = (n, p) => n === 1 ? PLACE[p][0] : `${n} ${PLACE[p][1]}`;
+const wholeWord = w => w === 1 ? 'שלם אחד' : `${w} שלמים`;
+function words(v) {
+  const w = Math.floor(v / K), p = places(v), parts = [];
+  if (w) parts.push(wholeWord(w));
+  if (p) parts.push(unitWord(digitsAfter(v, p), p));
+  return parts.length ? parts.join(' ו-') : 'אפס';
+}
+
+// ---- question pools: each level deals from a shuffled pool, no repeats until it runs out ----
+function interleave(...lists) { const out = []; for (let i = 0; lists.some(l => i < l.length); i++) for (const l of lists) if (i < l.length) out.push(l[i]); return out.reverse(); }
+
+const linePool1 = () => shuffle([100, 200, 300, 400, 500, 600, 700, 800, 900].map(v => ({kind: 'line', v, max: 1, cut: 10})));
+const linePool2 = () => shuffle([250, 750, 50, 80, 150, 350, 420, 620, 950, 990, 1400, 1750, 2250, 2600, 1050, 2950].map(v => ({kind: 'line', v, max: v < K ? 1 : 3, cut: 10})));
+
+// value of a digit: "what is the 7 worth in 3.472?" / "which digit is in the hundredths place?"
+function placePool() {
+  const o = [];
+  for (let k = 0; k < 40; k++) {
+    const ds = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4), v = ds[0] * K + ds[1] * 100 + ds[2] * 10 + ds[3];
+    const p = rnd(1, 3), dig = ds[p];
+    if (k % 2) o.push({kind: 'mc', sub: 'place', v, p, dig, html: `איזו ספרה נמצאת במקום ${PLACE_NAME[p]} במספר<span class="big">${dH(v)}</span>`,
+      opts: shuffle(ds.map(d => ({h: `<span class="mx">${d}</span>`, ok: d === dig})))});
+    else o.push({kind: 'mc', sub: 'value', v, p, dig, html: `כמה שווה הספרה ${dig} במספר<span class="big">${dH(v)}</span>`,
+      opts: [0, 1, 2, 3].map(q => ({h: `${dH(dig * 10 ** (3 - q))}<small>${q ? unitWord(dig, q) : dig + ' יחידות'}</small>`, ok: q === p}))});
+  }
+  return o;
+}
+// words → digits, including the zero that holds a place (7 hundredths is 0.07)
+function wordsPool() {
+  const o = [], add = (v, html) => o.push({kind: 'words', v, ans: v, mode: 'dec', html});
+  for (let w = 0; w <= 9; w++) for (let k = 1; k <= 9; k++) {
+    if (w) add(w * K + k * 100, `${wholeWord(w)} ו-${unitWord(k, 1)}`);
+    add(w * K + k * 10, w ? `${wholeWord(w)} ו-${unitWord(k, 2)}` : unitWord(k, 2));
+    if (k < 6) add(w * K + k, w ? `${wholeWord(w)} ו-${unitWord(k, 3)}` : unitWord(k, 3));
+  }
+  for (const h of [12, 25, 40, 75, 99, 305, 45, 120]) add(h * 10 ** (h >= 100 ? 0 : 1), unitWord(h, h >= 100 ? 3 : 2));
+  for (let t = 1; t <= 9; t += 2) for (const h of [2, 5, 8]) add(t * 100 + h * 10, `${unitWord(t, 1)} ו-${unitWord(h, 2)}`);
+  return shuffle(o);
+}
+const F2D = [[1, 10], [3, 10], [7, 10], [9, 10], [1, 2], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 20], [3, 20], [7, 20], [1, 25], [4, 25], [1, 8], [3, 8],
+  [7, 4], [5, 2], [13, 10], [9, 4], [6, 5], [27, 100], [3, 100], [45, 100], [9, 100], [11, 20], [3, 2], [9, 5]];
+const f2dPool = () => shuffle(F2D.map(([n, d]) => ({kind: 'f2d', x: T(n, d), ans: fv(T(n, d)), mode: 'dec'})));
+const D2F = [100, 300, 700, 900, 500, 200, 400, 600, 800, 250, 750, 50, 125, 1500, 2250, 1750, 30, 450, 1200, 2500, 80, 350];
+const d2fPool = () => shuffle(D2F.map(v => ({kind: 'd2f', v, ans: Q(v, K), mode: 'mixed'})));
+// × and : by 10, 100, 1,000; the classic slip is "add a zero", which leaves a decimal unchanged
+function shiftPool() {
+  const o = [];
+  for (const v of [3600, 450, 2500, 70, 123, 6200, 800, 45000, 7000, 1050, 30500, 12, 5, 8400, 960, 2000, 75000]) for (const f of [10, 100, 1000]) for (const op of ['×', ':']) {
+    const ans = op === '×' ? v * f : v / f;
+    if (!Number.isInteger(ans) || ans <= 0 || ans > 9999999) continue;
+    o.push({kind: 'shift', v, f, op, ans, mode: 'dec'});
+  }
+  return shuffle(o);
+}
+function cmpPool() {
+  const cats = {longer: [], zero: [], equal: [], close: [], whole: [], rep: []};
+  const add = (cat, x, y) => { if (Math.random() < .5) [x, y] = [y, x]; cats[cat].push({kind: 'cmp', x, y, cat, ans: Math.sign(itemV(x) - itemV(y))}); };
+  for (const [a, b] of [[800, 750], [300, 125], [1200, 1150], [500, 499], [2400, 2390], [600, 595], [900, 875], [600, 650]]) add('longer', D(a), D(b));
+  for (const [a, b] of [[80, 800], [50, 500], [2060, 2600], [1030, 1300], [7, 70], [4050, 4500]]) add('zero', D(a), D(b));
+  for (const [x, y] of [[D(500, 1), D(500, 2)], [D(1200, 1), D(1200, 2)], [D(300, 1), D(300, 3)], [D(750, 2), D(750, 3)], [F(1, 5), D(200)], [F(3, 4), D(750)], [F(1, 2), D(500, 2)]]) add('equal', x, y);
+  for (const [a, b] of [[1090, 1100], [3450, 3405], [2010, 2001], [999, 1000], [5060, 5006]]) add('close', D(a), D(b));
+  for (const [a, b] of [[3990, 4010], [2900, 3100], [9990, 10100], [1999, 2000]]) add('whole', D(a), D(b));
+  for (const [x, y] of [[F(1, 4), D(300)], [F(1, 2), D(450)], [F(3, 4), D(800)], [F(2, 5), D(350)], [F(1, 8), D(120)], [F(3, 5), D(650)], [F(7, 10), D(700, 2)]]) add('rep', x, y);
+  return interleave(...Object.values(cats).map(shuffle));
+}
+// order 4 numbers; sets are built from the same digits so length can't be used as a shortcut
+function orderPool() {
+  const o = [];
+  const fixed = [[800, 750, 80, 1100], [500, 450, 50, 505], [300, 125, 30, 1200], [2060, 2600, 2006, 260], [990, 1000, 909, 99], [1500, 150, 1050, 1005]];
+  for (const set of fixed) o.push(set);
+  for (let k = 0; k < 14; k++) {
+    const w = rnd(0, 2) * K, a = rnd(2, 9), b = rnd(1, 9);
+    o.push([w + a * 100, w + a * 10, w + a * 100 + b * 10, w + a * 100 + b]);
+  }
+  return shuffle(o.map(set => ({kind: 'order', items: shuffle(set.map(v => D(v)))})));
+}
+// misaligned digits: 2.5 + 1.25 → 3.30 (5 + 25 = 30)
+function digitTrap(a, b, op, ans) {
+  const pa = places(a), pb = places(b);
+  if (pa === pb || !pa || !pb) return null;
+  const L = Math.max(pa, pb), fa = digitsAfter(a, pa), fb = digitsAfter(b, pb), wa = Math.floor(a / K), wb = Math.floor(b / K);
+  let f, w;
+  if (op === '+') { f = fa + fb; w = wa + wb; if (f >= 10 ** L) return null; }
+  else { if (fa < fb || wa < wb) return null; f = fa - fb; w = wa - wb; }
+  const t = w * K + f * 10 ** (3 - L);
+  return t !== ans ? t : null;
+}
+function opPool() {
+  const o = [];
+  const randDec = () => { const p = rnd(1, 3), w = rnd(0, 9), f = rnd(1, 10 ** p - 1); return w * K + f * 10 ** (3 - p); };
+  while (o.length < 80) {
+    let a = randDec(), b = pick([randDec(), randDec(), rnd(1, 9) * K]);
+    const op = pick(['+', '−']);
+    if (op === '−' && a < b) [a, b] = [b, a];
+    if (a === b) continue;
+    const ans = op === '+' ? a + b : a - b;
+    if (op === '−' && ans <= 0) continue;
+    o.push({kind: 'op', a, b, op, ans, mode: 'dec', trap: digitTrap(a, b, op, ans)});
+  }
+  return shuffle(o);
+}
+// a fraction and a decimal in one exercise
+function mixPool() {
+  const o = [];
+  for (const [n, d] of [[1, 2], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 10], [3, 10], [7, 10]]) for (const b of [50, 300, 250, 600, 1500, 750, 1200, 2050]) for (const op of ['+', '−']) {
+    const fx = F(n, d), dy = D(b);
+    let x = fx, y = dy;
+    if (op === '+' && Math.random() < .5) [x, y] = [y, x];
+    if (op === '−' && itemV(x) < itemV(y)) [x, y] = [y, x];
+    const ans = op === '+' ? itemV(x) + itemV(y) : itemV(x) - itemV(y);
+    if (ans <= 0) continue;
+    o.push({kind: 'mix', x, y, op, ans, mode: 'dec'});
+  }
+  return shuffle(o);
+}
+// rounding and estimating, never on an exact middle value
+function roundPool() {
+  const o = [];
+  for (let k = 0; k < 40; k++) {
+    const t = k % 3;
+    if (t === 0) {
+      let v; do v = rnd(1, 9) * K + rnd(1, 99) * 10; while (v % K === 500);
+      const ans = roundTo(v, K), lo = Math.floor(v / K) * K;
+      o.push({kind: 'mc', sub: 'roundW', v, ans, html: `עגלי למספר השלם הקרוב<span class="big">${dH(v)}</span>`,
+        opts: shuffle([lo, lo + K, roundTo(v, 100)].filter((x, i, a) => a.indexOf(x) === i).map(x => ({h: dH(x), ok: x === ans})))});
+    } else if (t === 1) {
+      let v; do v = rnd(0, 9) * K + rnd(1, 99) * 10; while (v % 100 === 50 || v % 100 === 0);
+      const ans = roundTo(v, 100), lo = Math.floor(v / 100) * 100;
+      o.push({kind: 'mc', sub: 'roundT', v, ans, html: `עגלי לספרת העשיריות<span class="big">${dH(v)}</span>`,
+        opts: shuffle([D(lo, 1), D(lo + 100, 1), D(roundTo(v, K), 0)].filter((x, i, a) => a.findIndex(y => y.v === x.v) === i).map(x => ({h: dH(x.v, x.p), ok: x.v === ans})))});
+    } else {
+      const near = () => rnd(1, 8) * K + pick([1, 2, 3, 7, 8, 9]) * 100 + rnd(0, 9) * 10;
+      const a = near(), b = near(), est = roundTo(a, K) + roundTo(b, K), exact = a + b;
+      o.push({kind: 'mc', sub: 'est', a, b, ans: est, exact, html: `בערך כמה זה? (עגלי כל מספר לשלם)<span class="big"><span class="mx">${dstr(a)} + ${dstr(b)}</span></span>`,
+        opts: shuffle([est - K, est, est + K, est + 2 * K].map(x => ({h: dH(x), ok: x === est})))});
+    }
+  }
+  return o;
+}
+
+const LEVELS = [
+  {group: 'הכרת העשרוניים', name: 'עשיריות על הקו', pool: linePool1,
+   tip: 'הקו מ-0 עד 1 מחולק ל-10 חלקים שווים. כל חלק הוא עשירית: ⁦0.1⁩.',
+   why: 'למה ⁦0.5⁩ נמצא בדיוק באמצע בין 0 ל-1?'},
+  {group: 'הכרת העשרוניים', name: 'מאיות, ומספרים גדולים מ-1', pool: linePool2,
+   tip: '⁦0.25⁩ זה 2 עשיריות ועוד 5 מאיות, רבע מהדרך. ⁦1.4⁩ זה 1 ועוד 4 עשיריות.',
+   why: 'איפה נמצא ⁦0.08⁩ ביחס ל-⁦0.1⁩? למה הוא כל כך קרוב ל-0?'},
+  {group: 'הכרת העשרוניים', name: 'ערך הספרה', pool: placePool,
+   tip: 'אחרי הנקודה: עשיריות, מאיות, אלפיות. כל צעד ימינה קטן פי 10.',
+   why: 'למה הספרה 7 שווה פחות ככל שהיא רחוקה יותר מהנקודה, בצד ימין?'},
+  {group: 'הכרת העשרוניים', name: 'קוראים וכותבים', pool: wordsPool,
+   tip: '7 מאיות זה ⁦0.07⁩: במקום העשיריות כותבים 0 כדי ש-7 יגיע למקום המאיות.',
+   why: 'מה ההבדל בין ⁦0.7⁩ ל-⁦0.07⁩? איך היית מסבירה את זה לחברה?'},
+  {group: 'עשרוני ושבר', name: 'משבר לעשרוני', pool: f2dPool,
+   tip: 'מרחיבים את השבר למכנה 10, 100 או 1,000. למשל ⁦1/4 = 25/100 = 0.25⁩.',
+   why: 'איך הופכים ⁦1/4⁩ לעשרוני? למה מרחיבים דווקא ל-100?'},
+  {group: 'עשרוני ושבר', name: 'מעשרוני לשבר', pool: d2fPool,
+   tip: '⁦0.35⁩ זה 35 מאיות, כלומר ⁦35/100⁩. אחר כך אפשר לצמצם.',
+   why: 'האם ⁦0.5⁩ ו-⁦0.50⁩ הם אותו מספר? ואיך כותבים אותו כשבר?'},
+  {group: 'כפל וחילוק', name: 'כפל וחילוק ב-10, 100 ו-1,000', pool: shiftPool,
+   tip: 'הנקודה לא זזה! בכפל ב-10 כל ספרה עוברת מקום אחד שמאלה. בחילוק ב-10, מקום אחד ימינה.',
+   why: 'כשכופלים ב-10, הנקודה זזה או הספרות? ומה קורה ל-⁦0.3 × 10⁩?'},
+  {group: 'השוואה', name: 'מי גדול יותר?', pool: cmpPool,
+   tip: 'משווים קודם את השלמים, אחר כך העשיריות, אחר כך המאיות. אפשר להוסיף אפסים בסוף: ⁦0.8 = 0.80⁩.',
+   why: 'למה ⁦0.8⁩ גדול מ-⁦0.75⁩, אף שיש לו פחות ספרות?'},
+  {group: 'השוואה', name: 'מהקטן לגדול', pool: orderPool,
+   tip: 'הקישי על המספרים לפי הסדר, מהקטן ביותר לגדול ביותר.',
+   why: 'איך ידעת איזה מספר הכי קטן? מה בודקים קודם?'},
+  {group: 'חיבור וחיסור', name: 'חיבור וחיסור עשרוניים', pool: opPool,
+   tip: 'כותבים נקודה מתחת לנקודה. אם חסרות ספרות, משלימים אפסים: ⁦2.5 = 2.50⁩.',
+   why: 'למה חשוב לשים את הנקודות אחת מתחת לשנייה?'},
+  {group: 'חיבור וחיסור', name: 'שבר ועשרוני בתרגיל אחד', pool: mixPool,
+   tip: 'קודם הופכים את השבר לעשרוני: ⁦1/2 = 0.5⁩, ⁦1/4 = 0.25⁩. אחר כך מחשבים.',
+   why: 'מה קל יותר כאן: להפוך הכול לשבר או הכול לעשרוני? למה?'},
+  {group: 'חיבור וחיסור', name: 'עיגול ואומדן', pool: roundPool,
+   tip: 'בעיגול למספר שלם מסתכלים על ספרת העשיריות: 5 ומעלה מעגלים למעלה.',
+   why: 'איך האומדן עוזר לבדוק אם התשובה המדויקת הגיונית?'},
+];
+const GROUP_COLOR = {'הכרת העשרוניים': 'var(--tape-ink)', 'עשרוני ושבר': 'var(--a)', 'כפל וחילוק': 'var(--ok)', 'השוואה': 'var(--b)', 'חיבור וחיסור': 'var(--sum)'};
+
+const decks = [];
+function draw(i) { if (!decks[i]?.length) decks[i] = LEVELS[i].pool(); return decks[i].pop(); }
+
+// answer boxes
+function readDec(s) {
+  if (s === '' || s === '.') return null;
+  const [w, f = ''] = s.split('.');
+  return {val: (+w || 0) * K + +(f.padEnd(3, '0')), trailing: f.length > 0 && f.endsWith('0')};
+}
+function readAnswer(f) {
+  const has = k => f[k] !== '';
+  const w = has('w') ? +f.w : 0;
+  if (!has('n') && !has('d')) return has('w') ? {val: Q(w)} : null;
+  if (!has('d') || +f.d === 0) return {need: 'd'};
+  if (!has('n')) return {need: 'n'};
+  return {val: Q(w * +f.d + +f.n, +f.d), typed: {n: +f.n, d: +f.d}};
+}
+function formNote(typed, ans) {
+  if (!typed) return '';
+  if (typed.n >= typed.d) return `אפשר לכתוב גם ${txt(ans)}`;
+  if (!reduced(typed.n, typed.d)) return `אפשר גם לצמצם: ${txt(ans)}`;
+  return '';
+}
+
+// ---- race "היפוך": fraction and decimal cards on one line ----
+const DECKS = [
+  {name: 'עשיריות, חצאים וחמישיות', step: 100, cards: [D(500), F(1, 2), D(100), F(1, 10), D(200), F(1, 5), D(300), F(3, 10), D(400), F(2, 5)]},
+  {name: 'רבעים ומאיות', step: 50, cards: [D(250), F(1, 4), D(750), F(3, 4), D(500), F(1, 2), D(50), D(150), D(350), F(1, 20)]},
+]; // each deck holds a card worth one step, so any gap can still be closed
+const deal = deck => [pick(deck.cards), pick(deck.cards), pick(deck.cards)];
+function robotPick(pos, target, hand) {
+  const fits = hand.map((c, i) => ({i, p: pos + itemV(c)})).filter(o => o.p <= target);
+  if (!fits.length) return -1;
+  const win = fits.find(o => o.p === target);
+  return win ? win.i : fits.sort((a, b) => b.p - a.p)[0].i;
+}
+function raceOptions(pos, card, step) {
+  const ok = pos + itemV(card), cands = [];
+  if (!card.f) { const t = digitTrap(pos, card.v, '+', ok); if (t) cands.push(t); }
+  cands.push(...shuffle([ok + step, ok - step]), ok + 2 * step, ok - 2 * step);
+  const out = [ok];
+  for (const c of cands) if (out.length < 3 && c > 0 && !out.includes(c)) out.push(c);
+  return shuffle(out);
+}
+
+// ---- ui ----
+const $ = id => document.getElementById(id);
+const SCREENS = ['home', 'map', 'round', 'end', 'raceSetup', 'race', 'lab', 'learn'];
+const PRAISE = ['כל הכבוד!', 'מעולה!', 'בדיוק!', 'יפה מאוד!', 'נכון!', 'אלופה!'];
+const RACE_WHY = [
+  'איזה קלף שווה יותר, ⁦1/4⁩ או ⁦0.3⁩? איך ידעת?',
+  'אילו קלפים בחפיסה הם בעצם אותו מספר?',
+  'בתור של «היפוך», איך הפכת את המספר העשרוני לשבר?',
+  'מתי כדאי לדלג על תור?',
+];
+const SOUNDS = {tap: [[600, 0, .05]], yay: [[660, 0, .12], [880, .09, .12], [1320, .18, .25]], no: [[300, 0, .18]], win: [[523, 0, .18], [659, .15, .18], [784, .3, .18], [1047, .45, .5]]};
+const KEY = 'kav-haasroniyim-5';
+const DEF = {stars: [], muted: false, wins: 0, losses: 0, opp: 'parent', deck: 0, target: 2};
+let S; try { S = {...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}')}; } catch { S = {...DEF}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+let R = null, G = null, lastLvl = 0, ac;
+
+const later = (fn, ms) => { const r = R; setTimeout(() => R === r && fn(), ms); };
+const laterG = (fn, ms) => { const g = G; setTimeout(() => G === g && fn(), ms); };
+
+function sound(name) {
+  if (S.muted) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    const t0 = ac.currentTime;
+    for (const [f, at, dur] of SOUNDS[name]) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t0 + at);
+      g.gain.exponentialRampToValueAtTime(.18, t0 + at + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + at + dur);
+      o.connect(g).connect(ac.destination); o.start(t0 + at); o.stop(t0 + at + dur + .05);
+    }
+  } catch {}
+}
+function burst(big) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let i = 0; i < (big ? 36 : 12); i++) {
+    const s = document.createElement('span');
+    s.textContent = pick(['⭐', '✨', '🎉', '🔹', '🌟']);
+    s.style.left = rnd(3, 95) + '%'; s.style.fontSize = rnd(18, 34) + 'px'; s.style.animationDelay = rnd(0, 350) + 'ms';
+    $('fx').append(s); setTimeout(() => s.remove(), 2000);
+  }
+}
+
+// ---- pictures ----
+// number line 0..max; ticks every 1/cut, labelled as decimals when there is room; marks = [{v (thousandths), c, tag, dn}]
+function lineHTML({max = 1, cut = 0, cutLabels = false, marks = [], cls = '', pin = false}) {
+  const P = v => (v / max * 100).toFixed(3) + '%';
+  let h = `<div class="nl ${cls}"><div class="track"${pin ? ' id="track"' : ''}><div class="bar"></div>`;
+  if (cut) for (let k = 1; k < max * cut; k++) {
+    if (k % cut === 0) continue;
+    h += `<i class="tk mi" style="left:${P(k / cut)}"></i>`;
+    if (cutLabels) h += `<span class="lb mi" style="left:${P(k / cut)}">${dstr(k * K / cut)}</span>`;
+  }
+  for (let w = 0; w <= max; w++) h += `<i class="tk" style="left:${P(w)}"></i><span class="lb" style="left:${P(w)}">${w}</span>`;
+  for (const m of marks) h += `<span class="mk${m.dn ? ' dn' : ''}" style="left:${P(m.v / K)};--c:${m.c}"><span class="tag">${m.tag}</span><span class="stem"></span></span>`;
+  if (pin) h += `<span class="mk pin" id="pin" hidden style="--c:var(--b)"><span class="tag">?</span><span class="stem"></span></span>`;
+  return h + '</div></div>';
+}
+const PV_HEAD = ['אלפים', 'מאות', 'עשרות', 'יחידות', '', 'עשיריות', 'מאיות', 'אלפיות'];
+// place-value table: thousands … thousandths, the point fixed in its own column
+function pvHTML(v, {p = places(v), hl = -1, slide = 0, tap = false} = {}) {
+  const w = String(Math.floor(v / K)), f = String(v % K).padStart(3, '0'), cells = [];
+  for (let i = 0; i < 4; i++) { const d = w.length > 3 - i ? w[w.length - 4 + i] : ''; cells.push(d); }
+  for (let i = 0; i < 3; i++) cells.push(i < p ? f[i] : '');
+  let h = `<div class="pv${slide ? ' slide' : ''}" style="--s:${slide}">` + PV_HEAD.map(t => `<span class="h">${t}</span>`).join('');
+  cells.forEach((d, i) => {
+    if (i === 4) h += '<span class="pt" aria-hidden="true">.</span>';
+    const col = i < 4 ? i : i + 1, cls = `c${i >= 4 ? ' f' : ''}${i === hl ? ' hl' : ''}`;
+    h += tap ? `<button class="${cls}" data-col="${i}" aria-label="${PV_HEAD[col]}: ${d || 0}"><span>${d}</span></button>` : `<span class="${cls}"><span>${d}</span></span>`;
+  });
+  return h + '</div>';
+}
+function gridHTML(cells) { return `<div class="grid100">${Array.from({length: 100}, (_, i) => `<i${i < cells ? ' class="on"' : ''}></i>`).join('')}</div>`; }
+// column layout: numbers lined up at the point, missing places filled with zeros
+function colHTML(a, b, op, showAns, ans) {
+  const L = Math.max(places(a), places(b), showAns ? places(ans) : 0), all = [a, b].concat(showAns ? [ans] : []);
+  const W = Math.max(...all.map(v => String(Math.floor(v / K)).length));
+  const fmt = v => String(Math.floor(v / K)).padStart(W) + (L ? '.' + String(v % K).padStart(3, '0').slice(0, L) : '');
+  return `<div class="colsum">  ${fmt(a)}\n${op} ${fmt(b)}<hr>  ${showAns ? fmt(ans) : '?'.repeat(W) + (L ? '.' + '?'.repeat(L) : '')}</div>`;
+}
+function cmpWhy(q) {
+  const {x, y} = q, vx = itemV(x), vy = itemV(y), sign = q.ans > 0 ? '>' : q.ans < 0 ? '<' : '=';
+  const L = Math.max(places(vx), places(vy), 1);
+  let s = '';
+  if (x.f || y.f) s += 'הופכים את השבר לעשרוני: ' + [x, y].filter(i => i.f).map(i => ltr(`${i.f.n}/${i.f.d} = ${dstr(itemV(i))}`)).join(' , ') + '. ';
+  if (q.cat === 'longer') s += 'יותר ספרות לא אומר מספר גדול יותר. ';
+  if (q.cat === 'zero') s += 'שימי לב לאפס שתופס מקום. ';
+  if (q.cat === 'equal') s += 'אפסים בסוף לא משנים את המספר. ';
+  return s + `משלימים לאותו מספר ספרות: ${dT(vx, L)} , ${dT(vy, L)}, לכן ${ltr(`${dstr(vx, L)} ${sign} ${dstr(vy, L)}`)}`;
+}
+
+// ---- screens ----
+function show(id) {
+  for (const s of SCREENS) $(s).hidden = s !== id;
+  $('homeBtn').hidden = id === 'home';
+  if (id !== 'round') R = null;
+  if (id !== 'race') G = null;
+  ({home: drawHome, map: drawMap, raceSetup: drawSetup, lab: drawLab, learn: drawLearn})[id]?.();
+  scrollTo({top: 0});
+}
+function drawHome() {
+  $('hero').innerHTML = lineHTML({max: 1, cut: 10, cls: 'two', marks: [{v: 250, c: 'var(--a)', tag: '0.25'}, {v: 700, c: 'var(--b)', tag: '0.7'}, {v: 500, c: 'var(--sum)', tag: st(1, 2), dn: true}]});
+  const n = S.stars.filter(Boolean).length;
+  $('starsTxt').textContent = n ? `עברת ${n} מתוך ${LEVELS.length} שלבים` : `${LEVELS.length} שלבים`;
+}
+function drawMap() {
+  const nextI = LEVELS.findIndex((_, i) => !S.stars[i]);
+  let h = '', g = '';
+  LEVELS.forEach((l, i) => {
+    if (l.group !== g) { g = l.group; h += `<p class="group">${g}</p>`; }
+    h += `<button class="lvl${i === nextI ? ' next' : ''}" data-l="${i}" style="--c:${GROUP_COLOR[l.group]}"><span class="num">${i + 1}</span><span class="nm">${l.name}</span><span class="st" aria-label="${S.stars[i] || 0} כוכבים">${'⭐'.repeat(S.stars[i] || 0)}</span></button>`;
+  });
+  $('levels').innerHTML = h;
+}
+
+// ---- a round of one level ----
+const say = t => { $('msg').innerHTML = t; };
+function startLevel(i) {
+  lastLvl = i;
+  show('round');
+  R = {lvl: i, n: 0, total: 6, results: []};
+  $('where').textContent = `שלב ${i + 1} · ${LEVELS[i].name}`;
+  $('tip').innerHTML = '💡 ' + LEVELS[i].tip;
+  next();
+}
+function next() {
+  if (R.n >= R.total) return finish();
+  Object.assign(R, {q: draw(R.lvl), tries: 0, done: false, guess: null});
+  say(''); $('nextBtn').hidden = true; $('viz').innerHTML = '';
+  drawPath();
+  const q = R.q, k = q.kind;
+  $('lineArea').hidden = k !== 'line'; $('cmpArea').hidden = k !== 'cmp'; $('ordArea').hidden = k !== 'order'; $('mcArea').hidden = k !== 'mc';
+  $('finArea').hidden = !q.mode;
+  $('help').hidden = !q.mode;
+  $('nextBox').hidden = q.mode !== 'mixed';
+  $('dotKey').hidden = q.mode !== 'dec';
+  if (k === 'line') {
+    $('task').innerHTML = `איפה נמצא המספר על הקו? הקישי על הקו או גררי<span class="big">${dH(q.v)}</span>`;
+    $('viz').innerHTML = lineHTML({max: q.max, pin: true, cls: 'pick'});
+    const nl = $('viz').querySelector('.nl');
+    nl.tabIndex = 0; nl.setAttribute('role', 'slider'); nl.setAttribute('aria-label', 'קו המספרים');
+    nl.setAttribute('aria-valuemin', '0'); nl.setAttribute('aria-valuemax', String(q.max));
+    $('checkLine').disabled = true;
+  } else if (k === 'cmp') {
+    $('task').innerHTML = 'איזה מספר גדול יותר? אם הם שווים, בחרי «שווים».';
+    $('cmpArea').innerHTML = `<button class="cfr" data-c="x">${itemH(q.x)}</button><button class="eqb" data-c="eq">שווים</button><button class="cfr" data-c="y">${itemH(q.y)}</button>`;
+  } else if (k === 'order') {
+    $('task').innerHTML = 'סדרי מהקטן לגדול: הקישי קודם על המספר הקטן ביותר.';
+    R.picked = []; drawOrder();
+  } else if (k === 'mc') {
+    $('task').innerHTML = q.html;
+    $('mcArea').innerHTML = q.opts.map((o, i) => `<button class="opt" data-o="${i}">${o.h}</button>`).join('');
+  } else {
+    $('task').innerHTML = k === 'words' ? `כתבי במספר:<span class="big" style="direction:rtl;font-size:1.9rem">${q.html}</span>`
+      : k === 'f2d' ? `כתבי כמספר עשרוני<span class="big">${frH(q.x)} = ?</span>`
+      : k === 'd2f' ? `כתבי כשבר (או כמספר מעורב)<span class="big">${dH(q.v)} = ?</span>`
+      : k === 'shift' ? `<span class="big"><span class="mx">${dstr(q.v)} ${q.op} ${q.f.toLocaleString('en')} = ?</span></span>`
+      : k === 'op' ? `<span class="big"><span class="mx">${dstr(q.a)} ${q.op} ${dstr(q.b)} = ?</span></span>`
+      : `<span class="big"><span class="mx">${itemH(q.x)} ${q.op} ${itemH(q.y)} = ?</span></span>`;
+    R.inp = q.mode === 'dec' ? {mode: 'dec', s: ''} : {mode: 'mixed', w: '', n: '', d: '', f: 'n'};
+    $('finCap').textContent = q.mode === 'dec' ? 'כתבי את המספר, עם נקודה אם צריך' : 'שלמים (אם יש), מונה ומכנה';
+    drawFin();
+  }
+}
+function drawPath() {
+  $('path').innerHTML = Array.from({length: R.total}, (_, i) => {
+    const r = R.results[i];
+    return i === R.n ? '<i class="stone here">🦉</i>' : `<i class="stone ${r || ''}">${{star: '⭐', ok: '✓', miss: '•'}[r] || ''}</i>`;
+  }).join('');
+}
+
+// number line guessing
+function setGuess(clientX) {
+  const t = $('track'); if (!t || R?.done) return;
+  const rect = t.getBoundingClientRect(), f = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  moveGuess(f * R.q.max * K);
+}
+function moveGuess(v) {
+  R.guess = Math.min(R.q.max * K, Math.max(0, v));
+  const pin = $('pin'); pin.hidden = false; pin.style.left = (R.guess / (R.q.max * K) * 100) + '%';
+  $('viz').querySelector('.nl').setAttribute('aria-valuenow', (R.guess / K).toFixed(2));
+  $('checkLine').disabled = false;
+}
+function checkLine() {
+  if (!R || R.done || R.guess == null) return;
+  const q = R.q, err = Math.abs(R.guess - q.v) / (q.max * K), acc = Math.max(0, Math.round((1 - err) * 100));
+  const res = err <= .035 ? 'star' : err <= .08 ? 'ok' : 'miss';
+  $('viz').innerHTML = lineHTML({max: q.max, cut: q.cut, cutLabels: q.max === 1, cls: 'two',
+    marks: [{v: q.v, c: 'var(--ok)', tag: dstr(q.v)}, {v: R.guess, c: 'var(--b)', tag: 'את', dn: true}]});
+  say((res === 'star' ? 'בול! ⭐ ' : res === 'ok' ? 'קרוב מאוד! ✓ ' : 'המספר נמצא כאן, במקום הירוק. ') + `דיוק: ${acc}%. ${dT(q.v)} זה ${words(q.v)}.`);
+  sound(res === 'miss' ? 'no' : 'yay'); if (res === 'star') burst(false);
+  done(res, true);
+}
+
+// typed answers
+function drawFin() {
+  const f = R.inp;
+  if (f.mode === 'dec') { $('fin').innerHTML = `<span class="dbox" aria-label="התשובה שלך">${f.s}</span>`; return; }
+  const box = k => `<button class="box ${k}${f.f === k ? ' focus' : ''}" data-f="${k}" aria-label="${{w: 'שלמים', n: 'מונה', d: 'מכנה'}[k]}: ${f[k] || 'ריק'}">${f[k]}</button>`;
+  $('fin').innerHTML = box('w') + `<span class="fstack">${box('n')}<hr>${box('d')}</span>`;
+}
+function press(k) {
+  if (!R || R.done || $('finArea').hidden) return;
+  const f = R.inp;
+  if (k === 'go') return checkFin();
+  if (f.mode === 'dec') {
+    const [w, fr] = f.s.split('.');
+    if (k === 'del') f.s = f.s.slice(0, -1);
+    else if (k === '.') { if (fr === undefined) f.s = (f.s || '0') + '.'; }
+    else if (fr !== undefined ? fr.length < 3 : w.length < 7) f.s = (f.s + k).replace(/^0(?=\d)/, '');
+  } else {
+    const list = ['w', 'n', 'd'];
+    if (k === 'tab') f.f = list[(list.indexOf(f.f) + 1) % 3];
+    else if (k === 'del') f[f.f] = f[f.f].slice(0, -1);
+    else if (k !== '.' && f[f.f].length < 4) f[f.f] = (f[f.f] + k).replace(/^0(?=\d)/, '');
+  }
+  sound('tap'); drawFin();
+}
+function checkFin() {
+  const q = R.q;
+  let right, note = '', val;
+  if (R.inp.mode === 'dec') {
+    const got = readDec(R.inp.s);
+    if (!got) return say('כתבי תשובה 🙂');
+    val = got.val; right = val === q.ans;
+    if (right && got.trailing) note = `אפשר גם בלי האפסים בסוף: ${dT(q.ans)}`;
+  } else {
+    const got = readAnswer(R.inp);
+    if (!got) return say('כתבי תשובה בתיבות 🙂');
+    if (got.need) { R.inp.f = got.need; drawFin(); return say(got.need === 'd' ? 'חסר המכנה, המספר שמתחת לקו 🙂' : 'חסר המונה, המספר שמעל הקו 🙂'); }
+    right = same(got.val, q.ans); note = right ? formNote(got.typed, q.ans) : '';
+  }
+  if (right) {
+    const first = R.tries === 0;
+    $('fin').querySelectorAll('.box,.dbox').forEach(b => b.classList.add('right'));
+    say(pick(PRAISE) + (first ? ' ⭐' : ' ✓') + (note ? ` ${note}` : ''));
+    sound('yay'); burst(false);
+    return done(first ? 'star' : 'ok', !!note);
+  }
+  R.tries++; sound('no');
+  const special = slipMsg(q, val);
+  if (R.tries < 2) {
+    say(special || 'עוד לא. הציור יעזור 👇 נסי שוב.');
+    hint();
+    R.inp = R.inp.mode === 'dec' ? {mode: 'dec', s: ''} : {...R.inp, w: '', n: '', d: '', f: 'n'};
+    return drawFin();
+  }
+  hint(true);
+  say(`התשובה היא ${q.mode === 'dec' ? dT(q.ans) : txt(q.ans)}. לא נורא, ממשיכים 💪`);
+  done('miss', true);
+}
+// name the common slips when we see them
+function slipMsg(q, val) {
+  if (val == null) return '';
+  if (q.kind === 'op' && q.trap === val) return `חיברת את הספרות שאחרי הנקודה כאילו הן באותו מקום. כותבים נקודה מתחת לנקודה ומשלימים אפסים 👇`;
+  const pv = places(q.v ?? 0);
+  if (q.kind === 'shift' && val === q.v && pv >= 1 && pv <= 2) return `הוספת 0 בסוף לא משנה מספר עשרוני: ${ltr(`${dstr(q.v, pv + 1)} = ${dstr(q.v)}`)}. צריך להזיז את הספרות 👇`;
+  if (q.kind === 'shift' && val === (q.op === '×' ? q.v / q.f : q.v * q.f)) return 'הזזת את הספרות לכיוון ההפוך. בכפל המספר גדל, בחילוק הוא קטן.';
+  if (q.kind === 'words' && Math.floor(val / K) === Math.floor(q.ans / K)) {
+    const fv_ = val % K, fa = q.ans % K;
+    if (fv_ === fa * 10) return `${dT(val)} זה ${words(val)}. כדי שהספרה תגיע למקום הנכון, צריך 0 שתופס מקום אחרי הנקודה.`;
+    if (fv_ * 10 === fa) return `${dT(val)} זה ${words(val)}. יש כאן 0 מיותר אחרי הנקודה.`;
+  }
+  return '';
+}
+function hint(final) {
+  const q = R.q, v = $('viz');
+  if (q.kind === 'words') v.innerHTML = pvHTML(q.ans) + `<p class="cap">${q.html}: כל ספרה במקום שלה בטבלה.</p>`;
+  else if (q.kind === 'f2d') {
+    const den = [10, 100, 1000].find(t => t % q.x.d === 0), m = den / q.x.d;
+    v.innerHTML = (q.x.n < q.x.d && 100 % q.x.d === 0 ? gridHTML(q.x.n * 100 / q.x.d) : '')
+      + `<p class="cap">מרחיבים פי ${m}: ${ltr(`${q.x.n}/${q.x.d} = ${q.x.n * m}/${den}`)}. ${den === 10 ? 'עשיריות' : den === 100 ? 'מאיות' : 'אלפיות'} כותבים כך: ${final ? dT(q.ans) : '…'}</p>`;
+  } else if (q.kind === 'd2f') {
+    const p = places(q.v), den = 10 ** p;
+    v.innerHTML = (q.v < K && p <= 2 ? gridHTML(q.v / 10) : '') + `<p class="cap">${dT(q.v)} זה ${words(q.v)}: ${ltr(`${q.v / 10 ** (3 - p)}/${den}`)}. אפשר לצמצם?</p>`;
+  } else if (q.kind === 'shift') {
+    const n = String(q.f).length - 1, up = q.op === '×';
+    v.innerHTML = pvHTML(q.v) + `<p class="cap">${q.op === '×' ? 'בכפל' : 'בחילוק'} ב-${q.f.toLocaleString('en')} כל ספרה זזה ${n === 1 ? 'מקום אחד' : `${n} מקומות`} ${up ? 'שמאלה' : 'ימינה'}. הנקודה נשארת במקום.</p>`;
+  } else if (q.kind === 'op') v.innerHTML = colHTML(q.a, q.b, q.op, final, q.ans);
+  else if (q.kind === 'mix') {
+    const fr = [q.x, q.y].find(i => i.f);
+    v.innerHTML = `<p class="cap">קודם הופכים את השבר לעשרוני: ${ltr(`${fr.f.n}/${fr.f.d} = ${dstr(itemV(fr))}`)}</p>` + colHTML(itemV(q.x), itemV(q.y), q.op, final, q.ans);
+  }
+}
+
+// multiple choice, comparing, ordering: one try, then the explanation
+function pickMc(i) {
+  if (!R || R.done) return;
+  const q = R.q, ok = q.opts[i].ok;
+  $('mcArea').querySelectorAll('.opt').forEach((b, j) => b.classList.add(q.opts[j].ok ? 'right' : j === i ? 'wrong' : 'x'));
+  say((ok ? pick(PRAISE) + ' ⭐ ' : 'לא הפעם. ') + mcWhy(q));
+  sound(ok ? 'yay' : 'no'); if (ok) burst(false);
+  done(ok ? 'star' : 'miss', true);
+}
+function mcWhy(q) {
+  if (q.sub === 'place' || q.sub === 'value') {
+    $('viz').innerHTML = pvHTML(q.v, {hl: 3 + q.p});
+    return `הספרה ${q.dig} נמצאת במקום ${PLACE_NAME[q.p]}, לכן היא שווה ${unitWord(q.dig, q.p)}: ${dT(q.dig * 10 ** (3 - q.p))}.`;
+  }
+  if (q.sub === 'roundW') { const lo = Math.floor(q.v / K); return `${dT(q.v)} נמצא בין ${lo} ל-${lo + 1}. ספרת העשיריות היא ${Math.floor(q.v % K / 100)}, לכן מעגלים ל-${dT(q.ans)}.`; }
+  if (q.sub === 'roundT') return `ספרת המאיות היא ${q.v % 100 / 10}, לכן ${dT(q.v)} מתעגל ל-${dT(q.ans, 1)}.`;
+  return `${dT(q.a)} זה בערך ${dT(roundTo(q.a, K))}, ו-${dT(q.b)} זה בערך ${dT(roundTo(q.b, K))}. יחד בערך ${dT(q.ans)}. (התשובה המדויקת: ${dT(q.exact)})`;
+}
+function pickCmp(c) {
+  if (!R || R.done) return;
+  const q = R.q, want = q.ans > 0 ? 'x' : q.ans < 0 ? 'y' : 'eq', vx = itemV(q.x), vy = itemV(q.y);
+  const max = Math.max(1, Math.ceil(Math.max(vx, vy) / K));
+  $('viz').innerHTML = lineHTML({max, cls: 'two', marks: [{v: vx, c: 'var(--a)', tag: itemH(q.x)}, {v: vy, c: 'var(--b)', tag: itemH(q.y), dn: true}]});
+  $('cmpArea').querySelectorAll('button').forEach(b => b.classList.add(b.dataset.c === want ? 'right' : 'wrong'));
+  if (c === want) { say(pick(PRAISE) + ' ⭐ ' + cmpWhy(q)); sound('yay'); burst(false); done('star', true); }
+  else { say('לא הפעם. ' + cmpWhy(q)); sound('no'); done('miss', true); }
+}
+function drawOrder() {
+  const q = R.q;
+  $('slots').innerHTML = q.items.map((_, i) => (i ? '<span class="lt" aria-hidden="true">&lt;</span>' : '') + `<span class="slot${R.picked[i] != null ? ' full' : ''}">${R.picked[i] != null ? itemH(q.items[R.picked[i]]) : ''}</span>`).join('');
+  $('ordPool').innerHTML = q.items.map((it, i) => `<button class="opt${R.picked.includes(i) ? ' used' : ''}" data-i="${i}">${itemH(it)}</button>`).join('');
+}
+function pickOrder(i) {
+  if (!R || R.done || R.picked.includes(i)) return;
+  const q = R.q, left = q.items.map((_, j) => j).filter(j => !R.picked.includes(j));
+  const smallest = left.reduce((m, j) => itemV(q.items[j]) < itemV(q.items[m]) ? j : m, left[0]);
+  const sorted = [...q.items].sort((a, b) => itemV(a) - itemV(b));
+  const line = () => {
+    const max = Math.max(1, Math.ceil(itemV(sorted[3]) / K));
+    $('viz').innerHTML = lineHTML({max, cls: 'two', marks: sorted.map((it, j) => ({v: itemV(it), c: ['var(--a)', 'var(--b)', 'var(--sum)', 'var(--ok)'][j], tag: itemH(it), dn: j % 2 === 1}))});
+  };
+  const chain = `<span class="mx">${sorted.map(it => dstr(it.v)).join(' &lt; ')}</span>`;
+  if (i !== smallest) {
+    R.picked = sorted.map(it => q.items.indexOf(it)); drawOrder(); line();
+    say(`לא בדיוק. ${itemT(q.items[smallest])} קטן מ-${itemT(q.items[i])}. הסדר הנכון: ${chain}`);
+    sound('no'); return done('miss', true);
+  }
+  R.picked.push(i); sound('tap'); drawOrder();
+  if (R.picked.length === q.items.length) { line(); say(pick(PRAISE) + ' ⭐ ' + chain); sound('yay'); burst(false); done('star', true); }
+}
+
+function done(result, wait) {
+  R.done = true; R.results.push(result); R.n++; drawPath();
+  if (wait) $('nextBtn').hidden = false; else later(next, 1400);
+}
+function finish() {
+  const r = R, stars = r.results.filter(x => x === 'star').length;
+  const got = stars >= 5 ? 3 : stars >= 3 ? 2 : 1;
+  S.stars[r.lvl] = Math.max(S.stars[r.lvl] || 0, got); save();
+  show('end');
+  $('endFace').textContent = got === 3 ? '🏆' : got === 2 ? '🎉' : '💪';
+  $('endTitle').textContent = `סיימת את שלב ${r.lvl + 1}!`;
+  $('endText').textContent = `${'⭐'.repeat(got)} · ${stars} מתוך ${r.total} בדיוק בפעם הראשונה`;
+  $('endWhy').innerHTML = LEVELS[r.lvl].why;
+  const more = r.lvl < LEVELS.length - 1;
+  $('endNext').hidden = !more; $('endNext').textContent = `לשלב ${r.lvl + 2} ⬅️`;
+  sound('win'); if (got === 3) burst(true);
+}
+
+// ---- race ----
+function drawSetup() {
+  const mark = (id, v) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v))));
+  $('segDeck').innerHTML = DECKS.map((d, i) => `<button data-v="${i}">${d.name}</button>`).join('');
+  mark('segOpp', S.opp); mark('segDeck', S.deck); mark('segTarget', S.target);
+  $('raceRecord').textContent = S.wins + S.losses ? `ניצחת ${S.wins} פעמים מתוך ${S.wins + S.losses} משחקים` : '';
+}
+const pname = i => i === 0 ? 'את' : S.opp === 'parent' ? 'ההורה' : 'הרובוט';
+const pface = i => i === 0 ? '👧' : S.opp === 'parent' ? '🧑' : '🤖';
+const PCOL = ['var(--a)', 'var(--b)'];
+const rsay = t => { $('rmsg').innerHTML = t; };
+function startRace(starter = 0) {
+  show('race');
+  G = {deck: DECKS[S.deck], target: S.target * K, pos: [0, 0], turn: starter, turns: 0, hand: [], busy: false};
+  $('raceEnd').hidden = true; rsay('');
+  newTurn();
+}
+function drawRace() {
+  $('chips').innerHTML = [0, 1].map(i => `<div class="chip${G.turn === i ? ' on' : ''}" style="--c:${PCOL[i]}"><span class="f">${pface(i)}</span><b>${pname(i)}</b><span class="pos">${dH(G.pos[i])}</span></div>`).join('');
+  $('raceLine').innerHTML = lineHTML({max: S.target, cut: K / G.deck.step, cls: 'two race',
+    marks: [{v: G.pos[0], c: PCOL[0], tag: pface(0)}, {v: G.pos[1], c: PCOL[1], tag: pface(1), dn: true}]});
+}
+const robotTurn = () => G.turn === 1 && S.opp === 'robot';
+function newTurn() {
+  G.turns++; G.flip = G.turns % 3 === 0 && !robotTurn();
+  G.hand = deal(G.deck); G.sel = null; G.busy = robotTurn();
+  $('opts').innerHTML = ''; $('ask').hidden = true; $('flipb').hidden = !G.flip;
+  $('turn').textContent = G.turn === 0 ? 'התור שלך! בחרי קלף' : `התור של ${pname(1)}`;
+  drawRace(); drawHand();
+  $('pass').disabled = G.busy;
+  if (G.busy) laterG(robotMove, 1200);
+}
+function drawHand() {
+  $('hand').innerHTML = G.hand.map((c, i) => `<button class="cardf" data-i="${i}" aria-pressed="${G.sel === i}"${G.busy ? ' disabled' : ''}>${itemH(c)}</button>`).join('');
+}
+const optH = v => G.flip ? frH(Q(v, K)) : dH(v);
+function chooseCard(i) {
+  if (G.busy) return;
+  G.sel = i; drawHand(); sound('tap');
+  $('ask').hidden = false; $('ask').textContent = (G.turn === 0 ? 'לאן תגיעי?' : 'לאן מגיעים?') + (G.flip ? ' (בשבר)' : '');
+  $('opts').innerHTML = raceOptions(G.pos[G.turn], G.hand[i], G.deck.step).map(v => `<button class="opt" data-o="${v}">${optH(v)}</button>`).join('');
+}
+function answerRace(v) { if (!G.busy && G.sel != null) move(+v === G.pos[G.turn] + itemV(G.hand[G.sel])); }
+function move(right) {
+  G.busy = true; drawHand(); $('pass').disabled = true;
+  const p = G.turn, from = G.pos[p], card = G.hand[G.sel], to = from + itemV(card);
+  const eq = `<span class="mx">${dH(from)} + ${itemH(card)} = ${optH(to)}</span>`;
+  if (!right) { sound('no'); rsay(`לא בדיוק: ${eq}. התור עובר.`); return laterG(endTurn, 2600); }
+  if (to > G.target) { sound('no'); rsay(`${eq}, וזה יותר מ-${S.target}. עברת את היעד, נשארים במקום.`); return laterG(endTurn, 2600); }
+  G.pos[p] = to; sound('yay'); drawRace();
+  if (to === G.target) return laterG(() => raceWin(p), 700);
+  rsay(`${eq} 🗣️ ${p === 0 ? 'אמרי את זה בקול!' : 'אומרים את זה בקול!'}`);
+  laterG(endTurn, 2400);
+}
+function endTurn() { G.turn = 1 - G.turn; newTurn(); }
+function robotMove() {
+  const i = robotPick(G.pos[1], G.target, G.hand);
+  if (i < 0) { rsay('לרובוט אין קלף מתאים. הוא מדלג.'); return laterG(endTurn, 1800); }
+  G.sel = i; drawHand();
+  laterG(() => move(true), 800);
+}
+function raceWin(p) {
+  if (p === 0) S.wins++; else S.losses++;
+  save(); sound('win'); burst(true);
+  $('raceEnd').hidden = false;
+  $('winFace').textContent = p === 0 ? '🏆' : pface(1);
+  $('winTitle').textContent = p === 0 ? `ניצחת! נחתת בדיוק על ${S.target}` : `${pname(1)} נחת בדיוק על ${S.target}`;
+  $('winWhy').innerHTML = pick(RACE_WHY);
+  $('turn').textContent = ''; $('hand').innerHTML = ''; $('opts').innerHTML = ''; $('ask').hidden = true; $('flipb').hidden = true; rsay('');
+  G.winner = p;
+}
+
+// ---- lab: the digit machine ----
+let LABV = 3250;
+function drawLab(slide = 0, msg = '') {
+  $('labPv').innerHTML = pvHTML(LABV, {p: Math.max(1, places(LABV)), slide, tap: true});
+  const p = places(LABV), parts = [dH(LABV)];
+  if (p) {
+    const raw = T(LABV / 10 ** (3 - p), 10 ** p), fr = Q(raw.n, raw.d);
+    parts.push(frH(raw, false));
+    if (fr.d !== raw.d || fr.n > fr.d) parts.push(frH(fr));
+  }
+  $('labOut').innerHTML = `<span class="eq">${parts.join(' = ')}</span><span>${words(LABV)}</span>` + (msg ? `<span>${msg}</span>` : '');
+}
+function labOp(f, up) {
+  const nv = up ? LABV * f : LABV / f, n = String(f).length - 1, pl = n === 1 ? 'מקום אחד' : `${n} מקומות`;
+  if (up && nv > 9999999) return drawLab(0, 'המספר יוצא גדול מדי לטבלה. נסי לחלק קודם.');
+  if (!up && !Number.isInteger(nv)) return drawLab(0, 'חלק מהספרות יוצא מעבר לאלפיות. נסי מספר אחר.');
+  const before = LABV; LABV = nv; sound('tap');
+  drawLab(up ? n : -n, `<span class="mx">${dstr(before)} ${up ? '×' : ':'} ${f.toLocaleString('en')} = ${dstr(nv)}</span> · כל ספרה זזה ${pl} ${up ? 'שמאלה' : 'ימינה'}, והנקודה נשארה במקום.`);
+}
+// tapping a cell counts that digit up 0 → 9 → 0
+function labTap(col) {
+  const place = col < 4 ? 10 ** (3 - col) * K : 10 ** (6 - col);
+  LABV += (Math.floor(LABV / place) % 10 === 9 ? -9 : 1) * place;
+  sound('tap'); drawLab();
+}
+
+// ---- learn ----
+function drawLearn() {
+  $('lessons').innerHTML = `
+  <article class="lesson"><h3>1. עשיריות, מאיות ואלפיות</h3>
+    <p>השיטה העשרונית ממשיכה אחרי הנקודה: כל מקום ימינה קטן פי 10. ${dT(3472)} זה 3 שלמים, 4 עשיריות, 7 מאיות ו-2 אלפיות.</p>
+    ${pvHTML(3472)}
+    <div class="row"><button class="btn" data-l="2">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>2. עשרוני ושבר הם אותו מספר</h3>
+    <p>בריבוע של 100 משבצות, כל משבצת היא מאית. 25 משבצות הן ${dT(250)}, שזה ${txt(T(25, 100))}, שזה ${txt(T(1, 4))}.</p>
+    <div class="pair"><figure>${gridHTML(25)}<figcaption class="mx">0.25 = ${frH(T(1, 4))}</figcaption></figure><figure>${gridHTML(50)}<figcaption class="mx">0.5 = 0.50 = ${frH(T(1, 2))}</figcaption></figure></div>
+    <p>אפסים בסוף לא משנים: ${dT(500, 1)} ו-${dT(500, 2)} הם אותו מספר, 5 עשיריות או 50 מאיות.</p>
+    <div class="row"><button class="btn" data-l="4">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>3. כפל וחילוק ב-10, 100 ו-1,000</h3>
+    <p>הנקודה תמיד נשארת בין היחידות לעשיריות. מה שזז הן הספרות: ב-${ltr('× 10')} כל ספרה עוברת מקום אחד שמאלה, וב-${ltr(': 10')} מקום אחד ימינה.</p>
+    ${pvHTML(360)}<p class="cap">${ltr('0.36 × 10 = 3.6')}</p>${pvHTML(3600, {p: 1})}
+    <p class="warn">טעות נפוצה: "מוסיפים אפס". ${ltr('0.36 × 10')} זה לא ${dT(360, 3)}, כי ${ltr('0.360 = 0.36')}.</p>
+    <div class="row"><button class="btn" data-l="6">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>4. איך משווים עשרוניים?</h3>
+    <ul>
+      <li>קודם משווים את השלמים, אחר כך העשיריות, אחר כך המאיות.</li>
+      <li>יותר ספרות לא אומר גדול יותר: ${ltr('0.8 = 0.80')}, ו-${ltr('0.80 > 0.75')}.</li>
+      <li>שימי לב לאפס שתופס מקום: ${ltr('0.08 < 0.8')}.</li>
+      <li>שבר מול עשרוני: הופכים את השבר לעשרוני. ${ltr('1/4 = 0.25')}, לכן ${ltr('1/4 < 0.3')}.</li>
+    </ul>
+    <div class="row"><button class="btn" data-l="7">לתרגול ⬅️</button></div></article>
+  <article class="lesson"><h3>5. חיבור וחיסור, עיגול ואומדן</h3>
+    <p>כותבים נקודה מתחת לנקודה ומשלימים אפסים, ואז מחשבים כמו במספרים שלמים:</p>
+    ${colHTML(2500, 1250, '+', true, 3750)}
+    <p class="warn">טעות נפוצה: ${ltr('2.5 + 1.25 = 3.30')}. ה-5 הוא 5 עשיריות, וה-25 הוא 25 מאיות. אי אפשר לחבר אותם כאילו הם באותו מקום.</p>
+    <p>אומדן לפני החישוב עוזר לבדוק: ${ltr('2.5 + 1.25')} זה בערך ${ltr('3 + 1 = 4')}, אז ${dT(3750)} הגיוני.</p>
+    <div class="row"><button class="btn" data-l="9">לתרגול ⬅️</button></div></article>`;
+}
+
+// ---- events ----
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if (go) return show(go.dataset.go);
+  const lvl = e.target.closest('[data-l]');
+  if (lvl) return startLevel(+lvl.dataset.l);
+  const mul = e.target.closest('[data-mul],[data-div]');
+  if (mul) return labOp(+(mul.dataset.mul || mul.dataset.div), !!mul.dataset.mul);
+  const col = e.target.closest('[data-col]');
+  if (col) return labTap(+col.dataset.col);
+});
+$('pad').onclick = e => { const b = e.target.closest('button'); if (b) press(b.dataset.k || b.textContent); };
+$('fin').onclick = e => { const b = e.target.closest('[data-f]'); if (b && R && !R.done) { R.inp.f = b.dataset.f; drawFin(); } };
+$('nextBox').onclick = () => press('tab');
+$('cmpArea').onclick = e => { const b = e.target.closest('[data-c]'); if (b) pickCmp(b.dataset.c); };
+$('mcArea').onclick = e => { const b = e.target.closest('[data-o]'); if (b) pickMc(+b.dataset.o); };
+$('ordPool').onclick = e => { const b = e.target.closest('[data-i]'); if (b) pickOrder(+b.dataset.i); };
+$('checkLine').onclick = checkLine;
+$('nextBtn').onclick = () => R && next();
+$('help').onclick = () => R && !R.done && hint();
+$('skip').onclick = () => { if (R && !R.done) next(); };
+$('endNext').onclick = () => startLevel(lastLvl + 1);
+$('endAgain').onclick = () => startLevel(lastLvl);
+$('viz').addEventListener('pointerdown', e => {
+  if (!R || R.done || R.q.kind !== 'line' || !e.target.closest('.nl')) return;
+  e.preventDefault(); e.target.closest('.nl').setPointerCapture?.(e.pointerId); setGuess(e.clientX); R.drag = true;
+});
+$('viz').addEventListener('pointermove', e => { if (R?.drag) setGuess(e.clientX); });
+addEventListener('pointerup', () => { if (R) R.drag = false; });
+$('viz').addEventListener('keydown', e => {
+  if (!R || R.done || R.q.kind !== 'line') return;
+  const step = R.q.max * 10;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); moveGuess((R.guess ?? 0) + step); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); moveGuess((R.guess ?? 0) - step); }
+  if (e.key === 'Enter') { e.preventDefault(); checkLine(); }
+});
+addEventListener('keydown', e => {
+  if (!R || $('finArea').hidden || R.done) return;
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === '.' || e.key === ',') press('.');
+  else if (e.key === 'Backspace') press('del');
+  else if (e.key === 'Enter') { e.preventDefault(); press('go'); }
+  else if (e.key === '/' || e.key === ' ') { e.preventDefault(); press('tab'); }
+});
+for (const id of ['segOpp', 'segDeck', 'segTarget']) $(id).onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const v = b.dataset.v;
+  if (id === 'segOpp') S.opp = v; else if (id === 'segDeck') S.deck = +v; else S.target = +v;
+  save(); drawSetup(); sound('tap');
+};
+$('raceGo').onclick = () => startRace(0);
+$('raceAgain').onclick = () => startRace(1 - G.winner); // whoever lost goes first
+$('hand').onclick = e => { const b = e.target.closest('[data-i]'); if (b && G) chooseCard(+b.dataset.i); };
+$('opts').onclick = e => { const b = e.target.closest('[data-o]'); if (b && G) answerRace(b.dataset.o); };
+$('pass').onclick = () => { if (G && !G.busy) { G.busy = true; rsay(G.turn === 0 ? 'דילגת על התור.' : 'מדלגים על התור.'); laterG(endTurn, 1000); } };
+$('labRand').onclick = () => { LABV = rnd(1, 99) * pick([1, 10, 100]) + rnd(0, 9) * K; sound('tap'); drawLab(); };
+$('labZero').onclick = () => { LABV = 0; drawLab(); };
+$('mute').onclick = () => { S.muted = !S.muted; save(); $('mute').textContent = S.muted ? '🔇' : '🔊'; };
+$('mute').textContent = S.muted ? '🔇' : '🔊';
+show('home');
+</script>
+
+</html>
