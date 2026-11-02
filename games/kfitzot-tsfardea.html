@@ -66,14 +66,14 @@ header{display:flex;align-items:center;gap:8px}
 .ans{min-width:1.7em;padding:0 .15em;border-radius:16px;border:4px dashed var(--fw);text-align:center;line-height:1.2;color:var(--muted)}
 .ans.right{border-style:solid;border-color:var(--ok);color:var(--ok);animation:pop .35s}
 .pond{position:relative;border-radius:20px;background:linear-gradient(transparent 55%,#dff3fb 55%);overflow:hidden}
-.pond svg{display:block;width:100%;height:auto}
+.pond svg{display:block;width:100%;height:auto;direction:ltr} /* so arc labels read +10, not 10+ */
 .ax{stroke:var(--water);stroke-width:3;stroke-linecap:round}
 .tk{stroke:var(--water);stroke-width:1.5} .tk.big{stroke-width:2.5}
 .lb{font:600 14px var(--display);fill:var(--ink);text-anchor:middle}
 .tl{font:700 15px var(--display);fill:var(--pad);text-anchor:middle}
 .sl{font:600 13px var(--display);fill:var(--muted);text-anchor:middle}
 .st{fill:var(--muted)}
-.lotus{font-size:24px;text-anchor:middle}
+.lotus{font-size:24px;text-anchor:middle} .flag{font-size:18px}
 .arc{fill:none;stroke-width:3;stroke-linecap:round} .arc.fw{stroke:var(--fw)} .arc.bw{stroke:var(--bw)}
 .arc.new{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .3s ease-out forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
@@ -191,7 +191,7 @@ function shortest(s, t, steps, lo, hi) {
 // the window is fixed per question: one big jump of room on each side, so "jump past, then back" always fits
 function make(L, easy) {
   const big = Math.max(...L.steps.map(Math.abs)), max = L.max || 100;
-  const q = {mode: L.mode, steps: L.steps, ask: !!L.ask, big, max, ...L.gen(easy)};
+  const q = {mode: L.mode, steps: L.steps, ask: !!L.ask, guess: L.guess || false, noOf: !!L.noOf, big, max, ...L.gen(easy)};
   const a = Math.min(q.s, q.t), b = Math.max(q.s, q.t);
   q.lo = Math.max(0, Math.floor(a / big) * big - big);
   q.hi = Math.min(max, Math.ceil(b / big) * big + big);
@@ -199,27 +199,51 @@ function make(L, easy) {
   return q;
 }
 
+// guess-first, worded per level: 'hops' = how many jumps of 10, 'far' = how far, 'land' = where will she land
+const guessAnswer = q => q.guess === 'hops' ? Math.abs(q.t - q.s) / q.big : q.guess === 'far' ? Math.abs(q.t - q.s) : q.t;
+// the answer plus two classic slips: a ten too many/few (the forgotten carry or borrow) and an off-by-one from counting
+function guessOptions(q) {
+  const a = guessAnswer(q), unit = q.big / 10, fw = q.t > q.s;
+  if (q.guess === 'hops') return shuffle([a, a + 1, a > 1 ? a - 1 : a + 2]);
+  let ten = pick([q.big, -q.big]), one = pick([unit, -unit]);
+  if (q.guess === 'land') {
+    const k = Math.abs(q.t - q.s) % 10, o = q.s % 10;
+    if (fw ? o + k >= 10 : o < k) ten = fw ? -10 : 10; // 46 + 27 → 63: forgot to carry
+    if (q.steps.length === 4) one = fw ? 1 : -1;       // smart level: did +30 but forgot the −1
+  }
+  const slips = [...new Set([a + ten, a + one, a - ten, a - one].filter(v => v > 0 && v < q.max))];
+  return shuffle([a, ...slips.slice(0, 2)]);
+}
+
+// "46 ועוד 20 זה 66, ועוד 7 זה 73": the tens first, then the rest, as she'd say it aloud
+function walkHe(q) {
+  const tens = q.best.filter(st => Math.abs(st) === q.big).reduce((a, b) => a + b, 0), mid = q.s + tens, rest = q.t - mid;
+  const part = (d, to) => `${d > 0 ? 'ועוד' : 'פחות'} ${Math.abs(d)} זה ${to}`;
+  return tens && rest ? `${q.s} ${part(tens, mid)}, ${part(rest, q.t)}` : `${q.s} ${part(q.t - q.s, q.t)}`;
+}
+
 const LEVELS = [
-  {name: 'קפיצות של 10', em: '🔟', steps: [10], mode: 'reach',
+  {name: 'קפיצות של 10', em: '🔟', steps: [10], mode: 'reach', guess: 'hops',
     gen: e => { const s = notRound(1, e ? 19 : 39); return {s, t: s + 10 * rnd(e ? 1 : 2, e ? 3 : 6)}; }},
-  {name: 'עשרות ואחדות', em: '🐸', steps: [10, 1], mode: 'reach',
-    gen: e => { const d = notRound(11, e ? 25 : 48), s = rnd(2, 99 - d); return {s, t: s + d}; }},
+  // the one level that asks after jumping: counting the arcs first shows what "how far" means
   {name: 'כמה קפצת?', em: '🤔', steps: [10, 1], mode: 'reach', ask: true,
     gen: e => { const d = notRound(11, e ? 25 : 48), s = rnd(2, 99 - d); return {s, t: s + d}; }},
-  {name: 'קופצים אחורה', em: '🔙', steps: [-10, -1], mode: 'reach',
+  {name: 'עשרות ואחדות', em: '🐸', steps: [10, 1], mode: 'reach', guess: 'far',
+    gen: e => { const d = notRound(11, e ? 25 : 48), s = rnd(2, 99 - d); return {s, t: s + d}; }},
+  {name: 'קופצים אחורה', em: '🔙', steps: [-10, -1], mode: 'reach', guess: 'far',
     gen: e => { const d = notRound(11, e ? 25 : 38), s = rnd(d + 1, 99); return {s, t: s - d}; }},
-  {name: 'חיבור בקפיצות', em: '➕', steps: [10, 1], mode: 'add',
+  {name: 'חיבור בקפיצות', em: '➕', steps: [10, 1], mode: 'add', guess: 'land',
     gen: e => { const b = notRound(11, e ? 19 : 39), s = rnd(10, 99 - b); return {s, t: s + b}; }},
-  {name: 'חיסור בקפיצות', em: '➖', steps: [-10, -1], mode: 'sub',
+  {name: 'חיסור בקפיצות', em: '➖', steps: [-10, -1], mode: 'sub', guess: 'land',
     gen: e => { const b = notRound(11, e ? 19 : 34), s = rnd(b + 5, 99); return {s, t: s - b}; }},
   // +29 is quicker as +30 −1: ones digit 7–9, with room for the extra ten
-  {name: 'קפיצה חכמה', em: '💡', steps: [10, 1, -1, -10], mode: 'add',
+  {name: 'קפיצה חכמה', em: '💡', steps: [10, 1, -1, -10], mode: 'add', guess: 'land', noOf: true,
     gen: e => {
       const o = pick([7, 8, 9]), b = 10 * rnd(1, e ? 1 : 3) + o, up = b - o + 10;
       if (Math.random() < .5) { const s = rnd(10, 100 - up); return {s, t: s + b}; }
       const s = rnd(up, 99); return {s, t: s - b, mode: 'sub'};
     }},
-  {name: 'קפיצות של 100', em: '💯', steps: [100, 10], mode: 'reach', max: 1000,
+  {name: 'קפיצות של 100', em: '💯', steps: [100, 10], mode: 'reach', max: 1000, guess: 'far',
     gen: e => { const d = notRound(11, e ? 25 : 48, 10), s = 10 * rnd(1, (990 - d) / 10); return {s, t: s + d}; }},
 ];
 
@@ -325,7 +349,23 @@ function next() {
   R.intro = q.mode === 'reach' ? `קפצי מ-${q.s} עד 🪷 ${q.t}${q.steps.length === 1 ? ' · כל קפיצה היא 10' : ''}`
     : `קפצי ${b} ${fw ? 'קדימה' : 'אחורה'} מ-${q.s}. איפה תנחתי?${q.steps.length === 4 ? ' נסי במעט קפיצות 💡' : ''}`;
   say(R.intro);
+  R.guess = null;
+  if (q.guess) {
+    $('jumps').hidden = true; $('undo').hidden = true; $('choices').hidden = false;
+    $('choices').innerHTML = guessOptions(q).map(v => `<button data-v="${v}">${v}</button>`).join('');
+    say({hops: `קודם נחשי: כמה קפיצות של ${q.big} עד 🪷?`, far: `קודם נחשי: כמה רחוק מ-${q.s} עד 🪷 ${q.t}?`, land: 'קודם נחשי: איפה הצפרדע תנחת?'}[q.guess] + ' 🤔');
+  }
   showEq(false); drawPond(false);
+}
+
+// her guess goes on the line as a flag; then the jumps check it
+function setGuess(b) {
+  const q = R.q;
+  R.guess = +b.dataset.v;
+  $('choices').hidden = true; $('jumps').hidden = false; $('undo').hidden = false;
+  R.intro = q.guess === 'land' ? `ניחשת ${R.guess} 🚩 עכשיו קפצי ${Math.abs(q.t - q.s)} ${q.t > q.s ? 'קדימה' : 'אחורה'} ובדקי!`
+    : `ניחשת ${R.guess}. עכשיו קפצי עד 🪷 ובדקי!`;
+  say(R.intro); drawPond(false); sound('tap');
 }
 
 function drawPath() {
@@ -355,6 +395,7 @@ function drawPond(animate) {
   }
   h += `<circle cx="${xAt(q.s)}" cy="${Y}" r="5" class="st"/><text x="${xAt(q.s)}" y="${Y + 44}" class="sl">${q.s}</text>`;
   if (q.mode === 'reach') h += `<text x="${xAt(q.t)}" y="${Y + 8}" class="lotus">🪷</text><text x="${xAt(q.t)}" y="${Y + 44}" class="tl">${q.t}</text>`;
+  if (q.guess === 'land' && R.guess != null && R.guess >= q.lo && R.guess <= q.hi) h += `<text x="${xAt(R.guess)}" y="${Y - 2}" class="flag">🚩</text>`;
   let p = q.s;
   R.jumps.forEach((st, i) => {
     const n = p + st, x1 = xAt(p), x2 = xAt(n), tall = Math.abs(st) === q.big ? 50 : 20, mid = (x1 + x2) / 2, dir = st > 0 ? 'fw' : 'bw';
@@ -374,9 +415,10 @@ function drawPond(animate) {
 
 function drawCount() {
   const q = R.q, moved = R.pos - q.s, n = R.jumps.length;
-  if (q.ask && !R.revealed) $('count').textContent = jumpsHe(n); // the distance is the question here
+  if (q.guess && R.guess == null) $('count').textContent = ''; // still guessing
+  else if (q.ask && !R.revealed) $('count').textContent = jumpsHe(n); // the distance is the question here
   else if (q.mode === 'reach') $('count').innerHTML = `קפצת ${ltr(sg(moved) || '0')} · ${jumpsHe(n)}`;
-  else $('count').innerHTML = `קפצת ${ltr(sg(moved) || '0')} מתוך ${ltr(sg(q.t - q.s))}`;
+  else $('count').innerHTML = `קפצת ${ltr(sg(moved) || '0')}` + (q.noOf ? '' : ` מתוך ${ltr(sg(q.t - q.s))}`);
 }
 
 function jump(st) {
@@ -410,6 +452,13 @@ function land() {
   later(() => {
     if (q.ask) return showChoices();
     showEq(true);
+    if (q.guess) { // the star is for the guess: the thinking happened before the jumps
+      const a = guessAnswer(q), right = R.guess === a, more = n > min ? ` · אפשר גם ב-${jumpsHe(min)}` : '';
+      const was = {hops: `היו ${jumpsHe(a)}`, far: `קפצת ${a}`, land: `הצפרדע נחתה על ${a}`}[q.guess];
+      say(right ? `${pick(PRAISE)} ניחשת נכון! 🎯 ${walkHe(q)}${more}` : `ניחשת ${R.guess}, ו${was}. ${walkHe(q)} 👀`);
+      sound(right ? 'yay' : 'hop'); if (right) burst(true);
+      return done(right ? 'star' : 'ok', right ? 3400 : 4800);
+    }
     const star = n <= min;
     say(star ? `${pick(PRAISE)} ${n === 1 ? 'בקפיצה אחת' : `רק ${n} קפיצות`}! ⭐` : `הגעת! 🎉 אפשר גם ב-${jumpsHe(min)}: ${bestHe(q.best)}`);
     sound('yay'); burst(star);
@@ -480,7 +529,7 @@ document.addEventListener('click', e => {
   R = null; show(b.dataset.go);
 });
 $('jumps').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) jump(+b.dataset.s); };
-$('choices').onclick = e => { const b = e.target.closest('button'); if (b && R && !locked && !b.disabled) choose(b); };
+$('choices').onclick = e => { const b = e.target.closest('button'); if (b && R && !locked && !b.disabled) (R.q.guess && R.guess == null ? setGuess : choose)(b); };
 $('undo').onclick = undo;
 $('levels').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) startLevel(+b.dataset.l); };
 $('buddies').onclick = e => { const b = e.target.closest('button'); if (b) { S.buddy = b.textContent; save(); drawHome(); sound('tap'); } };
